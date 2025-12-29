@@ -1,16 +1,3 @@
 @import "tailwindcss";
 
-@font-face {
-    font-family: "Oswald";
-    src: url("https://fonts.gstatic.com/s/oswald/v48/TK3iWkUHHAIjg752GT8G.woff2") format("woff2");
-    font-weight: 200 700;
-    font-style: normal;
-    font-display: swap;
-}
-
-.oswald-\<uniquifier\> {
-    font-family: "Oswald", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: <weight>;
-    font-style: normal;
-}
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
