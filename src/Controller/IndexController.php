@@ -13,6 +13,8 @@ final class IndexController extends AbstractController
     {
         return $this->render('index/index.html.twig', [
             'controller_name' => 'IndexController',
+            'progress' => '50',
+            'goal' => '900,000,500',
         ]);
     }
 }
