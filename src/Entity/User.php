@@ -39,21 +39,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
-    /**
-     * @var Collection<int, Project>
-     */
     #[ORM\OneToMany(mappedBy: 'creator', targetEntity: Project::class)]
     private Collection $projects;
 
-    /**
-     * @var Collection<int, Contribution>
-     */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Contribution::class)]
     private Collection $contributions;
 
-    /**
-     * @var Collection<int, Comment>
-     */
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: Comment::class)]
     private Collection $comments;
 
@@ -63,8 +54,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->contributions = new ArrayCollection();
         $this->comments = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
-        $this->isActive = true; // Default to active upon creation
-        $this->role = 'ROLE_USER'; // Default role
+        $this->isActive = true;
+        $this->role = 'ROLE_USER';
     }
 
     public function getId(): ?int
@@ -80,7 +71,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -92,40 +82,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): static
     {
         $this->email = $email;
-
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     * @see UserInterface
-     */
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
     }
 
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
+    // 🔐 PASSWORD (unchanged DB, Symfony-ready)
     public function getPassword(): string
     {
-        return $this->password;
+        return (string) $this->password;
     }
 
     public function setPassword(string $password): static
     {
         $this->password = $password;
-
         return $this;
     }
 
-    /**
-     * @see UserInterface
-     */
     public function getRoles(): array
     {
-        // Guaranteed to have at least one role to pass Symfony security checks
         $role = $this->role;
         return array_unique([$role, 'ROLE_USER']);
     }
@@ -138,17 +116,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRole(string $role): static
     {
         $this->role = $role;
-
         return $this;
     }
 
-    /**
-     * @see UserInterface
-     */
     public function eraseCredentials(): void
     {
-        // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
+        // nothing to clear
+    }
+
+    // ✅ isActive enforced by Symfony
+    public function isEnabled(): bool
+    {
+        return $this->isActive === true;
     }
 
     public function isIsActive(): ?bool
@@ -159,7 +138,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsActive(bool $isActive): static
     {
         $this->isActive = $isActive;
-
         return $this;
     }
 
@@ -171,97 +149,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
-    /**
-     * @return Collection<int, Project>
-     */
     public function getProjects(): Collection
     {
         return $this->projects;
     }
 
-    public function addProject(Project $project): static
-    {
-        if (!$this->projects->contains($project)) {
-            $this->projects->add($project);
-            $project->setCreator($this);
-        }
-
-        return $this;
-    }
-
-    public function removeProject(Project $project): static
-    {
-        if ($this->projects->removeElement($project)) {
-            // set the owning side to null (unless already changed)
-            if ($project->getCreator() === $this) {
-                $project->setCreator(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Contribution>
-     */
     public function getContributions(): Collection
     {
         return $this->contributions;
     }
 
-    public function addContribution(Contribution $contribution): static
-    {
-        if (!$this->contributions->contains($contribution)) {
-            $this->contributions->add($contribution);
-            $contribution->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeContribution(Contribution $contribution): static
-    {
-        if ($this->contributions->removeElement($contribution)) {
-            // set the owning side to null (unless already changed)
-            if ($contribution->getUser() === $this) {
-                $contribution->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Comment>
-     */
     public function getComments(): Collection
     {
         return $this->comments;
-    }
-
-    public function addComment(Comment $comment): static
-    {
-        if (!$this->comments->contains($comment)) {
-            $this->comments->add($comment);
-            $comment->setAuthor($this);
-        }
-
-        return $this;
-    }
-
-    public function removeComment(Comment $comment): static
-    {
-        if ($this->comments->removeElement($comment)) {
-            // set the owning side to null (unless already changed)
-            if ($comment->getAuthor() === $this) {
-                $comment->setAuthor(null);
-            }
-        }
-
-        return $this;
     }
 }

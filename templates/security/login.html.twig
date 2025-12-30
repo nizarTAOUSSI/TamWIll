@@ -1,0 +1,141 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Log in!{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <img src="{{ asset('TamwillLogo.png') }}" alt="TamWill Logo" class="h-20 w-20">
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
+      <p class="mt-2 text-center text-sm text-gray-600">Welcome back — we're glad to see you.</p>
+    </div>
+
+    {% for label, messages in app.flashes %}
+      {% for msg in messages %}
+        <div class="rounded-md bg-green-50 p-4 mb-4" role="alert"{% if label == 'error' %} style="background:#FEF2F2;color:#991B1B"{% endif %}>
+          <div class="text-sm">
+            {{ msg }}
+          </div>
+        </div>
+      {% endfor %}
+    {% endfor %}
+
+    {# If the user is already logged in, show greeting and logout only #}
+    {% if app.user %}
+      <div class="bg-white p-6 rounded-lg shadow text-center">
+        <h2 class="text-2xl font-semibold">Hello, {{ app.user.name ? app.user.name : app.user.userIdentifier }} 👋</h2>
+        <p class="mt-2 text-sm text-gray-600">You are logged in.</p>
+
+        <form method="post" action="{{ path('app_logout') }}" class="mt-6">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+          <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">Logout</button>
+        </form>
+      </div>
+    {% else %}
+      <div id="login-container">
+        <form id="login-form" class="mt-8 space-y-6 bg-white p-6 rounded-lg shadow" method="post" novalidate>
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+          {% if error %}
+            <div class="rounded-md bg-red-50 p-4">
+              <div class="text-sm text-red-700">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+            </div>
+          {% endif %}
+
+          <div class="rounded-md shadow-sm -space-y-px">
+            <div class="mb-4">
+              <label for="inputEmail" class="sr-only">Email address</label>
+              <input id="inputEmail" name="email" type="email" autocomplete="email" required value="{{ last_username }}" class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Email address">
+            </div>
+            <div>
+              <label for="inputPassword" class="sr-only">Password</label>
+              <input id="inputPassword" name="password" type="password" autocomplete="current-password" required class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Password">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <input id="remember_me" name="_remember_me" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+              <label for="remember_me" class="ml-2 block text-sm text-gray-900">Remember me</label>
+            </div>
+            <div class="text-sm">
+              <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">Forgot your password?</a>
+            </div>
+          </div>
+
+          <div>
+            <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Sign in
+            </button>
+          </div>
+
+          <div class="mt-4 text-center">
+            <button type="button" id="show-register" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Don't have an account? Sign up</button>
+          </div>
+        </form>
+
+        {# Hidden registration form: toggled by JS #}
+        <form id="register-form" class="mt-8 space-y-6 bg-white p-6 rounded-lg shadow hidden" method="post" action="{{ path('app_register') }}" novalidate>
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
+
+          <h3 class="text-lg font-medium text-gray-900">Create an account</h3>
+
+          <div class="rounded-md shadow-sm -space-y-px">
+            <div class="mb-4">
+              <label for="reg_name" class="sr-only">Name</label>
+              <input id="reg_name" name="name" type="text" required class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Full name">
+            </div>
+            <div class="mb-4">
+              <label for="reg_email" class="sr-only">Email address</label>
+              <input id="reg_email" name="email" type="email" required class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Email address">
+            </div>
+            <div>
+              <label for="reg_password" class="sr-only">Password</label>
+              <input id="reg_password" name="password" type="password" required class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Password (min 6 chars)">
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">Sign up</button>
+            <button type="button" id="cancel-register" class="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Back to login</button>
+          </div>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{# JS to toggle login/register views (keeps page behavior without exposing both forms) #}
+<script>
+  (function(){
+    const showBtn = document.getElementById('show-register');
+    const cancelBtn = document.getElementById('cancel-register');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+
+    if (showBtn) showBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      history.replaceState(null, document.title, window.location.pathname + window.location.search + '#register');
+      loginForm.classList.add('hidden');
+      registerForm.classList.remove('hidden');
+      registerForm.querySelector('#reg_name').focus();
+    });
+
+    if (cancelBtn) cancelBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      // remove hash without reloading
+      history.replaceState(null, document.title, window.location.pathname + window.location.search);
+      registerForm.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+      loginForm.querySelector('#inputEmail').focus();
+    });
+
+    // Show register form automatically when visiting /login#register
+    if (location.hash === '#register') {
+      if (showBtn) showBtn.click();
+    }
+  })();
+</script>
+
+{% endblock %}
