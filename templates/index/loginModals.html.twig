@@ -1,0 +1,128 @@
+
+<div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md relative">
+        <button id="close-auth-modal" class="absolute top-2 right-2 text-gray-500 hover:text-black cursor-pointer text-2xl">&times;</button>
+        <div id="modal-login-form">
+            <form id="modal-login" class="space-y-6 p-6" method="post" novalidate>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                <h2 class="text-2xl font-bold text-center mb-2">Sign in to your account</h2>
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div class="mb-4">
+                        <label for="modal_inputEmail" class="sr-only">Email address</label>
+                        <input id="modal_inputEmail" name="email" type="email" autocomplete="email" required class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Email address">
+                    </div>
+                    <div>
+                        <label for="modal_inputPassword" class="sr-only">Password</label>
+                        <input id="modal_inputPassword" name="password" type="password" autocomplete="current-password" required class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Password">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="modal_remember_me" name="_remember_me" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="modal_remember_me" class="ml-2 block text-sm text-gray-900">Remember me</label>
+                    </div>
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-gray-500 hover:text-black hover:underline">Forgot your password?</a>
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <button type="submit" class="group cursor-pointer relative w-10/12 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Sign in
+                    </button>
+                </div>
+                <div class="mt-4 text-center">
+                    <button type="button" id="modal-show-register" class="font-sm cursor-pointer text-gray-500 hover:text-black hover:underline">Don't have an account? Sign up</button>
+                </div>
+            </form>
+        </div>
+        <div id="modal-register-form" class="hidden">
+            <form id="modal-register" class="space-y-6 p-6" method="post" action="{{ path('app_register') }}" novalidate>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
+                <h3 class="text-lg font-medium text-gray-900 text-center">Create an account</h3>
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div class="mb-4">
+                        <label for="modal_reg_name" class="sr-only">Name</label>
+                        <input id="modal_reg_name" name="name" type="text" required class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Full name">
+                    </div>
+                    <div class="mb-4">
+                        <label for="modal_reg_email" class="sr-only">Email address</label>
+                        <input id="modal_reg_email" name="email" type="email" required class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Email address">
+                    </div>
+                    <div>
+                        <label for="modal_reg_password" class="sr-only">Password</label>
+                        <input id="modal_reg_password" name="password" type="password" required class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Password (min 6 chars)">
+                    </div>
+                </div>
+                <div class="space-y-4 mx-auto flex flex-col items-center">
+                    <button type="submit" class="group cursor-pointer relative w-10/12 flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Sign up</button>
+                    <button type="button" id="modal-cancel-register" class="cursor-pointer font-medium text-gray-500 hover:text-black hover:underline">Back to login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const authModal = document.getElementById('auth-modal');
+        const openLoginBtn = document.getElementById('open-login-modal');
+        const openSignupBtn = document.getElementById('open-signup-modal');
+        const closeModalBtn = document.getElementById('close-auth-modal');
+        const loginFormDiv = document.getElementById('modal-login-form');
+        const registerFormDiv = document.getElementById('modal-register-form');
+        const showRegisterBtn = document.getElementById('modal-show-register');
+        const cancelRegisterBtn = document.getElementById('modal-cancel-register');
+
+        function openModal(showRegister) {
+            authModal.classList.remove('hidden');
+            if (showRegister) {
+                loginFormDiv.classList.add('hidden');
+                registerFormDiv.classList.remove('hidden');
+                registerFormDiv.querySelector('#modal_reg_name').focus();
+            } else {
+                loginFormDiv.classList.remove('hidden');
+                registerFormDiv.classList.add('hidden');
+                loginFormDiv.querySelector('#modal_inputEmail').focus();
+            }
+        }
+
+        if (openLoginBtn) {
+            openLoginBtn.addEventListener('click', function () {
+                openModal(false);
+            });
+        }
+        if (openSignupBtn) {
+            openSignupBtn.addEventListener('click', function () {
+                openModal(true);
+            });
+        }
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', function () {
+                authModal.classList.add('hidden');
+            });
+        }
+        if (showRegisterBtn) {
+            showRegisterBtn.addEventListener('click', function () {
+                loginFormDiv.classList.add('hidden');
+                registerFormDiv.classList.remove('hidden');
+                registerFormDiv.querySelector('#modal_reg_name').focus();
+            });
+        }
+        if (cancelRegisterBtn) {
+            cancelRegisterBtn.addEventListener('click', function () {
+                registerFormDiv.classList.add('hidden');
+                loginFormDiv.classList.remove('hidden');
+                loginFormDiv.querySelector('#modal_inputEmail').focus();
+            });
+        }
+        authModal && authModal.addEventListener('click', function (e) {
+            if (e.target === authModal) {
+                authModal.classList.add('hidden');
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !authModal.classList.contains('hidden')) {
+                authModal.classList.add('hidden');
+            }
+        });
+    });
+</script>

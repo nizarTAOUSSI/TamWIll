@@ -1,42 +1,14 @@
-{% block body %}
-	<nav class="flex items-center justify-between m-2">
-		<div class="flex items-center justify-center font-bold">
-			<img src="{{ asset('TamwillLogo.png') }}" alt="TamWill Logo" class="h-20 w-20">
-			<h1 class="text-5xl">TamWill</h1>
-		</div>
-		<ul class="flex space-x-8 p-4 text-dark-700 font-medium">
-			<li class="hover:scale-110">
-				<a href="/">Home</a>
-			</li>
-			<li class="hover:scale-110">
-				<a href="#about-us">About US</a>
-			</li>
-			<li class="hover:scale-110">
-				<a href="#how-it-works">How it works</a>
-			</li>
-			<li class="hover:scale-110">
-				<a href="/campaigns">Campaigns</a>
-			</li>
-			<li class="hover:scale-110">
-				<a href="#contact-us">Contact US</a>
-			</li>
-		</ul>
-
-		<div class="flex items-center justify-center gap-3 mr-5">
-			{% if app.user %}
-				<div class="flex justify-center items-center gap-3">
-					<img class="rounded-full max-w-none w-10 h-10 object-cover" src="https://ui-avatars.com/api/?name={{ app.user.name|url_encode }}&background=random" alt="{{ app.user.name }}"/>
-					<form method="post" action="{{ path('app_logout') }}" class="flex justify-center items-center">
-						<input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
-						<button class="hover:scale-110 hover:text-red-600 cursor-pointer">
-							<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewbox="0 0 512 512" height="30px" width="30px" xmlns="http://www.w3.org/2000/svg">
-								<path d="M192 277.4h189.7l-43.6 44.7L368 352l96-96-96-96-31 29.9 44.7 44.7H192v42.8z"></path>
-								<path d="M255.7 421.3c-44.1 0-85.5-17.2-116.7-48.4-31.2-31.2-48.3-72.7-48.3-116.9 0-44.1 17.2-85.7 48.3-116.9 31.2-31.2 72.6-48.4 116.7-48.4 44 0 85.3 17.1 116.5 48.2l30.3-30.3c-8.5-8.4-17.8-16.2-27.7-23.2C339.7 61 298.6 48 255.7 48 141.2 48 48 141.3 48 256s93.2 208 207.7 208c42.9 0 84-13 119-37.5 10-7 19.2-14.7 27.7-23.2l-30.2-30.2c-31.1 31.1-72.5 48.2-116.5 48.2zM448.004 256.847l-.849-.848.849-.849.848.849z"></path>
-							</svg>
-						</button>
-					</form>
-				</div>
-			{% else %}
+<footer class="bg-black text-white py-10 border-t border-gray-800 shadow-inner">
+	<div class="container mx-auto flex flex-col md:flex-row items-center justify-between px-6 gap-8">
+		<div class="flex flex-col items-center md:items-start mb-6 md:mb-0 w-full md:w-1/3" id="about-us">
+			<div class="flex items-center mb-2">
+				<img src="{{ asset('TamwillLogo.png') }}" alt="TamWill Logo" class="h-14 w-14 rounded-full shadow-lg bg-white p-1 mr-3">
+				<span class="text-2xl font-extrabold tracking-wide">TamWill</span>
+			</div>
+			<p class="text-gray-300 text-xs max-w-xs text-center md:text-left">
+				TamWill is a charity donation platform that connects donors and project creators to support humanitarian, social, and innovative causes across Morocco. Join us to make a real impact!
+			</p>
+			<div class="flex items-center ml-46 mt-4 space-x-4">
 				<button class="hover:scale-110 cursor-pointer">
 					<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewbox="0 0 320 512" height="20px" width="20px" xmlns="http://www.w3.org/2000/svg">
 						<path d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"></path>
@@ -57,16 +29,33 @@
 						<path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
 					</svg>
 				</button>
-				{% if app.request.pathInfo != '/' %}
-					<button onclick="openModal()" class="hover:scale-110 cursor-pointer px-3 py-1 rounded-4xl bg-black text-white font-semibold">
-						Sign In
-					</button>
-					<button onclick="openModal(true)" class="hover:scale-110 cursor-pointer px-3 py-1 rounded-4xl bg-white text-black border-2 border-black font-semibold">
-						Sign Up
-					</button>
-				{% endif %}
-			{% endif  %}
+			</div>
 		</div>
-
-	</nav>
-{% endblock %}
+		<div class="flex flex-col items-center md:items-center w-full md:w-1/3">
+			<div class="flex items-center mb-2">
+				<img src="https://alpharepgroup.com/emsi/images/logo-emsi-entry.png" alt="EMSI Logo" class="h-12 w-auto rounded shadow-lg bg-white p-1 mr-2">
+				<div>
+					<h2 class="text-lg font-bold">EMSI Les Orangers</h2>
+					<p class="text-xs text-gray-300">Ecole Marocaine des Sciences de l'Ingénieur</p>
+				</div>
+			</div>
+			<p class="text-xs text-gray-400 mt-1">Made with
+				<span class="text-red-500">&hearts;</span>
+				at EMSI - 3IIR - G8</p>
+		</div>
+	</div>
+	<div class="mt-8 border-t border-gray-700 pt-6 text-center text-gray-400 text-sm flex flex-col md:flex-row items-center justify-center gap-2">
+		<span class="flex items-center gap-1">
+			Project created by:
+			<span class="font-semibold text-white ml-1">NIZAR TAOUSSI</span>,
+			<span class="font-semibold text-white ml-1">OTHMANE BAZ</span>,
+			<span class="font-semibold text-white ml-1">ANOUAR ELACHGAR</span>
+		</span>
+		<span class="mx-2 hidden md:inline">|</span>
+		<span>
+			&copy;
+			{{ "now"|date("Y") }}
+			<span class="font-bold text-white">TamWill</span>. All rights reserved.
+		</span>
+	</div>
+</footer>

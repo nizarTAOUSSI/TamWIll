@@ -14,7 +14,7 @@ use App\Repository\UserRepository;
 
 class SecurityController extends AbstractController
 {
-    #[Route(path: '/login', name: 'app_login')]
+    #[Route(path: '/', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         // if ($this->getUser()) {
@@ -26,7 +26,7 @@ class SecurityController extends AbstractController
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        return $this->render('security/login.html.twig', ['last_username' => $lastUsername, 'error' => $error]);
+        return $this->render('/', ['last_username' => $lastUsername, 'error' => $error]);
     }
 
     #[Route(path: '/register', name: 'app_register', methods: ['POST'])]
@@ -63,7 +63,6 @@ class SecurityController extends AbstractController
         $user->setEmail($email);
         $hashed = $passwordHasher->hashPassword($user, $plainPassword);
         $user->setPassword($hashed);
-        // ensure default role is ROLE_USER (the entity constructor already sets this)
         $user->setRole('ROLE_USER');
         $user->setIsActive(true);
 

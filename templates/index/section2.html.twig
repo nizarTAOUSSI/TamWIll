@@ -1,64 +1,65 @@
-{% extends 'base.html.twig' %}
-
 {% block body %}
-<div class="min-h-screen bg-gray-100 p-10 flex flex-col items-center">
-    <h1 class="text-4xl font-bold text-center mb-16 text-gray-800">Support Our Projects</h1>
+	<div class="min-h-screen bg-gray-100 p-10 flex flex-col items-center">
+		<h1 class="text-4xl font-bold text-center mb-16 text-gray-800">Support Our Projects</h1>
 
-    <div class="flex flex-wrap justify-center gap-16">
+		<div class="flex flex-wrap justify-center gap-16">
 
-        {% for row in projects|batch(3) %}
+			{% for row in projects|batch(3) %}
 
-            <div class="card-container bg-white shadow-lg relative w-[520px] h-[600px] flex-shrink-0 mb-10">
+				<div class="card-container bg-white shadow-lg relative w-[520px] h-[600px] flex-shrink-0 mb-10">
 
-                {% for project in row %}
+					{% for project in row %}
 
-                    {% if loop.index == 1 %}
-                        <div class="card bg-blue-500 rounded-2xl h-[300px] w-full absolute top-0 left-0 overflow-hidden group"
-                             style="background-image: url('{{ project.image|default('https://placehold.co/800x600') }}'); background-size: cover;">
+						{% if loop.index == 1 %}
+							<div class="card bg-blue-500 rounded-2xl h-[300px] w-full absolute top-0 left-0 overflow-hidden group" style="background-image: url('{{ project.image|default('https://placehold.co/800x600') }}'); background-size: cover;">
 
-                            <div class="card-content bg-black/40 hover:bg-black/60 transition-colors h-full w-full p-6 flex flex-col justify-end text-white">
-                                <div class="card-title text-2xl font-bold">{{ project.title }}</div>
-                                <div class="card-description text-sm text-gray-200 mb-2">{{ project.description }}</div>
-                                <button class="bg-yellow-500 text-black px-4 py-1 cursor-pointer rounded font-bold text-sm w-fit mt-2">Donate ${{ project.goalAmount }}</button>
-                            </div>
-                        </div>
-                    {% endif %}
+								<div class="card-content bg-black/40 hover:bg-black/60 transition-colors h-full w-full p-6 flex flex-col justify-end text-white">
+									<div class="card-title text-2xl font-bold">{{ project.title }}</div>
+									<div class="card-description text-sm text-gray-200 mb-2">{{ project.description }}</div>
+									<button class="bg-yellow-500 text-black px-4 py-1 cursor-pointer rounded font-bold text-sm w-fit mt-2">Donate ${{ project.goalAmount }}</button>
+								</div>
+							</div>
+						{% endif %}
 
-                    {% if loop.index == 2 %}
-                        <div class="card bg-teal-600 rounded-2xl h-[200px] w-[200px] absolute top-[305px] left-0 bottom-0 overflow-hidden group"
-                             style="background-image: url('{{ project.image|default('https://placehold.co/600x400') }}'); background-size: cover;">
+						{% if loop.index == 2 %}
+							<div class="card bg-teal-600 rounded-2xl h-[200px] w-[200px] absolute top-[305px] left-0 bottom-0 overflow-hidden group" style="background-image: url('{{ project.image|default('https://placehold.co/600x400') }}'); background-size: cover;">
 
-                            <div class="card-content bg-teal-900/80 hover:bg-teal-900/90 transition-colors h-full w-full p-4 flex flex-col justify-end text-white">
-                                <div class="card-title font-bold leading-tight mb-1">{{ project.title }}</div>
-                                <div class="text-xs text-gray-300 mb-2">{{ project.description|slice(0, 40) }}...</div>
-                                <button class="bg-white text-teal-900 px-3 py-1 cursor-pointer rounded font-bold text-xs w-full">Donate</button>
-                            </div>
-                        </div>
-                    {% endif %}
+								<div class="card-content bg-teal-900/80 hover:bg-teal-900/90 transition-colors h-full w-full p-4 flex flex-col justify-end text-white">
+									<div class="card-title font-bold leading-tight mb-1">{{ project.title }}</div>
+									<div class="text-xs text-gray-300 mb-2">{{ project.description|slice(0, 40) }}...</div>
+									<button class="bg-white text-teal-900 px-3 py-1 cursor-pointer rounded font-bold text-xs w-full">Donate</button>
+								</div>
+							</div>
+						{% endif %}
 
-                    {% if loop.index == 3 %}
-                        <div class="card-d3 bg-indigo-600 rounded-2xl border-4 hover:border-0 border-white h-[280px] w-[305px] absolute right-0 bottom-0 overflow-hidden group"
-                             style="background-image: url('{{ project.image|default('https://placehold.co/600x400') }}'); background-size: cover;">
+						{% if loop.index == 3 %}
+							<div class="card-d3 bg-indigo-600 rounded-2xl border-4 hover:border-0 border-white h-[280px] w-[305px] absolute right-0 bottom-0 overflow-hidden group" style="background-image: url('{{ project.image|default('https://placehold.co/600x400') }}'); background-size: cover;">
 
-                            <div class="card-content bg-indigo-900/80 hover:bg-indigo-900/90 transition-colors h-full w-full p-5 flex flex-col justify-end text-white">
-                                <div class="card-title font-bold text-lg mb-1">{{ project.title }}</div>
-                                <div class="card-description text-xs text-gray-300 mb-3">{{ project.description }}</div>
+								<div class="card-content bg-indigo-900/80 hover:bg-indigo-900/90 transition-colors h-full w-full p-5 flex flex-col justify-end text-white">
+									<div class="card-title font-bold text-lg mb-1">{{ project.title }}</div>
+									<div class="card-description text-xs text-gray-300 mb-3">{{ project.description }}</div>
 
-                                <div class="flex justify-between items-end">
-                                    <span class="text-xs bg-indigo-500 px-2 py-1 rounded">{{ project.status }}</span>
-                                    <button class="bg-yellow-400 text-black px-4 py-2 cursor-pointer rounded font-bold text-xs shadow-lg">Donate</button>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
+									<div class="flex justify-between items-end">
+										<span class="text-xs bg-indigo-500 px-2 py-1 rounded">{{ project.status }}</span>
+										<button class="bg-yellow-400 text-black px-4 py-2 cursor-pointer rounded font-bold text-xs shadow-lg">Donate</button>
+									</div>
+								</div>
+							</div>
+						{% endif %}
 
-                {% endfor %}
+					{% endfor %}
 
-            </div>
-        {% else %}
-            <p class="text-gray-500">No projects found.</p>
-        {% endfor %}
+				</div>
+			{% else %}
+				<p class="text-gray-500">No projects found.</p>
+			{% endfor %}
 
-    </div>
-</div>
+		</div>
+
+		<a href="{{ path('app_project_index') }}">
+			<button class="mt-10 bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-black hover:scale-110 cursor-pointer transition duration-300">
+				View All Projects
+			</button>
+		</a>
+	</div>
 {% endblock %}

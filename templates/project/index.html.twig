@@ -1,0 +1,126 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+	<style>
+		.break-inside {
+			-moz-column-break-inside: avoid;
+			break-inside: avoid;
+		}
+	</style>
+
+	<div class="flex py-8 items-center flex-col min-h-screen">
+		<div class="wrapper w-full px-4">
+
+			<div class="text-center mb-10">
+				<h1 class="text-4xl font-extrabold text-slate-800">Discover Campaigns</h1>
+				<p class="text-slate-500 mt-2">Support creativity and innovation</p>
+			</div>
+
+			<div class="box-border max-w-7xl mx-auto sm:columns-1 md:columns-2 lg:columns-3 xl:columns-3 gap-4">
+
+				{% for project in projects %}
+					<article class="mb-4 break-inside break-inside-avoid p-6 rounded-xl bg-white flex flex-col bg-clip-border shadow-sm hover:shadow-lg transition-shadow duration-300">
+
+						<div class="flex pb-6 items-center justify-between">
+							<div class="flex items-center">
+								<img class="rounded-full max-w-none w-12 mr-4 h-12 object-cover" src="https://ui-avatars.com/api/?name={{ project.creator.name|url_encode }}&background=random" alt="{{ project.creator.name }}"/>
+								<div class="flex flex-col">
+									<div>
+										<a class="inline-block text-lg font-bold text-slate-800" href="#">
+											{{ project.creator.name }}
+										</a>
+									</div>
+									<div class="text-slate-500 text-sm">
+										{{ project.creator.email }}
+									</div>
+									<div class="text-slate-400 text-xs mt-1">
+										{{ project.createdAt|date('F j, Y') }}
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<h2 class="text-2xl font-extrabold text-slate-800 mb-2">
+							{{ project.title }}
+						</h2>
+
+						{% if project.image %}
+							<div class="py-4">
+								<a class="flex" href="{{ path('app_project_show', {id: project.id}) }}">
+									<img class="w-full rounded-lg object-cover max-h-64" src="{{ project.image }}" alt="{{ project.title }}" onerror="this.src='https://placehold.co/600x400?text=No+Image'"/>
+								</a>
+							</div>
+						{% endif %}
+
+						<p class="text-slate-600 mb-4">
+							{{ project.description|length > 150 ? project.description|slice(0, 150) ~ '...' : project.description }}
+						</p>
+
+						<div class="py-4 border-t border-slate-100">
+							<div class="flex justify-between items-center mb-2">
+								<span class="text-sm font-bold text-slate-700">Raised: ${{ project.collectedAmount }}</span>
+								<span class="text-sm text-slate-500">Goal: ${{ project.goalAmount }}</span>
+							</div>
+							{% set percent = (project.collectedAmount / project.goalAmount) * 100 %}
+							<div class="w-full bg-slate-200 rounded-full h-2.5">
+								<div class="bg-black h-2.5 rounded-full" style="width: {{ percent > 100 ? 100 : percent }}%"></div>
+							</div>
+						</div>
+
+						<div class="flex justify-between items-center mb-2">
+							<div class="px-3 py-1 text-xs font-bold uppercase rounded-full
+																		{% if project.status == 'active' %} bg-green-100 text-green-700
+																		{% elseif project.status == 'completed' %} bg-blue-100 text-blue-700
+																		{% else %} bg-gray-100 text-gray-700 {% endif %}">
+								{{ project.status }}
+							</div>
+							<button onclick="{{ not app.user ? 'window.openModal(false)' : 'window.location.href=\'/project/' ~ project.id ~ '\';' }}" class="bg-gray-900 text-white px-6 py-2 rounded-md ml-5 mt-3 hover:bg-black hover:scale-110 cursor-pointer transition duration-300">
+								Donate Now
+							</button>
+						</div>
+
+
+						<div class="relative mt-2">
+							<form method="post" action="{{ path('app_project_comment', {id: project.id}) }}" class="flex items-center mb-2">
+								<input name="content" class="pt-2 pb-2 pl-3 w-full h-11 bg-slate-100 rounded-lg placeholder:text-slate-600 font-medium pr-12 focus:outline-none focus:ring-2 focus:ring-black {% if not app.user %}cursor-not-allowed{% endif %}" type="text" placeholder="Write a comment" {% if not app.user %} disabled {% endif %}/>
+								<button type="submit" class="flex absolute right-3 top-2/4 -mt-3 items-center {% if not app.user %}cursor-not-allowed {% else %}cursor-pointer{% endif %}" {% if not app.user %} disabled {% endif %}>
+									<svg class="fill-black w-6 h-6" viewbox="0 0 24 24">
+										<path d="M2,21L23,12L2,3V10L17,12L2,14V21Z"></path>
+									</svg>
+								</button>
+							</form>
+						</div>
+						{% if projectComments[project.id]|length > 0 %}
+							<div class="bg-slate-50 rounded-lg p-3 mt-2">
+								<h4 class="text-sm font-semibold text-slate-700 mb-2">Comments</h4>
+								<ul class="space-y-2">
+									{% for comment in projectComments[project.id] %}
+										<li class="flex items-start gap-2">
+											<div class="flex-shrink-0">
+												<img src="https://ui-avatars.com/api/?name={{ comment.author.name|url_encode }}&background=random" alt="{{ comment.author.name }}" class="w-8 h-8 rounded-full object-cover">
+											</div>
+											<div class="flex-1">
+												<div class="bg-white rounded-lg px-3 py-2 shadow-sm">
+													<div class="flex justify-between items-center">
+														<span class="font-medium text-slate-800">{{ comment.author.name }}</span>
+														<span class="text-xs text-slate-400">{{ comment.createdAt|date('M d, H:i') }}</span>
+													</div>
+													<p class="text-slate-700 text-sm mt-1">{{ comment.content }}</p>
+												</div>
+											</div>
+										</li>
+									{% endfor %}
+								</ul>
+							</div>
+						{% endif %}
+					</article>
+				{% else %}
+					<div class="col-span-3 text-center py-10">
+						<p class="text-xl text-slate-500">No projects found.</p>
+					</div>
+				{% endfor %}
+
+			</div>
+		</div>
+	</div>
+{% endblock %}
