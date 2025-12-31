@@ -1,0 +1,16 @@
+{% block footer %}
+	<div class="border-t border-gray-700 p-6 text-center text-gray-400 text-sm flex flex-col md:flex-row items-center justify-center gap-2 bg-black">
+		<span class="flex items-center gap-1">
+			Project created by:
+			<span class="font-semibold text-white ml-1">NIZAR TAOUSSI</span>,
+			<span class="font-semibold text-white ml-1">OTHMANE BAZ</span>,
+			<span class="font-semibold text-white ml-1">ANOUAR ELACHGAR</span>
+		</span>
+		<span class="mx-2 hidden md:inline">|</span>
+		<span>
+			&copy;
+			{{ "now"|date("Y") }}
+			<span class="font-bold text-white">TamWill</span>. All rights reserved.
+		</span>
+	</div>
+{% endblock %}
