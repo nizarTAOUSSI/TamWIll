@@ -56,6 +56,18 @@ class Project
     #[ORM\OneToOne(mappedBy: 'project', cascade: ['persist', 'remove'])]
     private ?Scoreboard $scoreboard = null;
 
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $payoutStatus = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $rib = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $payoutRequestedAt = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $payoutCompletedAt = null;
+
     public function __construct()
     {
         $this->contributions = new ArrayCollection();
@@ -63,6 +75,7 @@ class Project
         $this->createdAt = new \DateTimeImmutable();
         $this->collectedAmount = '0.00';
         $this->status = 'draft';
+        $this->payoutStatus = 'pending';
     }
 
     public function getId(): ?int
@@ -246,6 +259,50 @@ class Project
             $scoreboard->setProject($this);
         }
         $this->scoreboard = $scoreboard;
+        return $this;
+    }
+
+    public function getPayoutStatus(): ?string
+    {
+        return $this->payoutStatus;
+    }
+
+    public function setPayoutStatus(?string $payoutStatus): static
+    {
+        $this->payoutStatus = $payoutStatus;
+        return $this;
+    }
+
+    public function getRib(): ?string
+    {
+        return $this->rib;
+    }
+
+    public function setRib(?string $rib): static
+    {
+        $this->rib = $rib;
+        return $this;
+    }
+
+    public function getPayoutRequestedAt(): ?\DateTimeInterface
+    {
+        return $this->payoutRequestedAt;
+    }
+
+    public function setPayoutRequestedAt(?\DateTimeInterface $payoutRequestedAt): static
+    {
+        $this->payoutRequestedAt = $payoutRequestedAt;
+        return $this;
+    }
+
+    public function getPayoutCompletedAt(): ?\DateTimeInterface
+    {
+        return $this->payoutCompletedAt;
+    }
+
+    public function setPayoutCompletedAt(?\DateTimeInterface $payoutCompletedAt): static
+    {
+        $this->payoutCompletedAt = $payoutCompletedAt;
         return $this;
     }
 }

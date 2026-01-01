@@ -26,11 +26,16 @@
 
 		<div class="flex items-center justify-center gap-3 mr-5">
 			{% if app.user %}
+                {% if app.user.role == 'ROLE_CREATOR' %}
+                    <a href="{{ path('app_dashboard_project', {id: app.user.projects|first.id}) }}" class="px-4 py-2 bg-gray-200 text-black font-bold rounded-lg hover:bg-gray-300 transition-all">
+                        Dashboard
+                    </a>
+                {% endif %}
                 <div class="relative group">
 
                     <button class="flex items-center gap-2 focus:outline-none group">
                         <span class="hidden md:block font-bold text-sm mr-1">{{ app.user.name }}</span>
-                        <img class="rounded-full w-10 h-10 object-cover border-2 border-transparent group-hover:border-black transition-all duration-200" src="https://ui-avatars.com/api/?name={{ app.user.name|url_encode }}&background=000&color=fff" alt="{{ app.user.name }}"/>
+                        <img class="rounded-full w-10 h-10 object-cover border-2 border-transparent group-hover:border-black transition-all duration-200" src="{{ app.user.profilePicture ? asset('uploads/' ~ app.user.profilePicture) : 'https://ui-avatars.com/api/?name=' ~ app.user.name|url_encode ~ '&background=000&color=fff' }}" alt="{{ app.user.name }}"/>
                         <svg class="w-4 h-4 text-gray-500 group-hover:text-black transition-transform duration-200 group-focus:rotate-180" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
@@ -52,7 +57,7 @@
                             </a>
                         {% endif %}
 
-                        <a href="#" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-black hover:font-bold transition-colors">
+                        <a href="{{ path('app_profile') }}" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-black hover:font-bold transition-colors">
                             <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>

@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Start a New Project
+{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-gray-50 text-black font-sans py-12">
+		<div class="max-w-4xl mx-auto px-4 md:px-6">
+
+			<div class="mb-10 text-center">
+				<h1 class="text-5xl font-black tracking-tight mb-3">Start Your Project</h1>
+				<p class="text-gray-600 text-lg">Turn your idea into reality. Create a crowdfunding campaign in minutes.</p>
+			</div>
+
+			{% for message in app.flashes('success') %}
+				<div class="mb-6 bg-green-100 border-2 border-green-600 text-green-800 px-6 py-4 rounded-lg font-bold">
+					{{ message }}
+				</div>
+			{% endfor %}
+
+			{% for message in app.flashes('error') %}
+				<div class="mb-6 bg-red-100 border-2 border-red-600 text-red-800 px-6 py-4 rounded-lg font-bold">
+					{{ message }}
+				</div>
+			{% endfor %}
+
+			<div class="bg-white border-2 border-black rounded-xl shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+				<div class="p-8 border-b-2 border-black bg-black text-white">
+					<h2 class="text-2xl font-black">Project Details</h2>
+					<p class="text-gray-300 mt-1">Fill in the information about your project</p>
+				</div>
+
+				<form action="{{ path('app_project_create') }}" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+
+					<div>
+						<label for="title" class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+							Project Title *
+						</label>
+						<input type="text" id="title" name="title" required placeholder="e.g., Revolutionary Smart Watch" class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-4 focus:ring-gray-200 font-medium"/>
+						<p class="text-xs text-gray-500 mt-1">Make it catchy and descriptive</p>
+					</div>
+
+					<div>
+						<label for="description" class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+							Description *
+						</label>
+						<textarea id="description" name="description" required rows="8" placeholder="Tell your story. What problem does your project solve? Why should people support it?" class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-4 focus:ring-gray-200 font-medium resize-none"></textarea>
+						<p class="text-xs text-gray-500 mt-1">Minimum 50 characters recommended</p>
+					</div>
+
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div>
+							<label for="goal_amount" class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+								Funding Goal ($) *
+							</label>
+							<div class="relative">
+								<span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-bold text-lg">$</span>
+								<input type="number" id="goal_amount" name="goal_amount" required min="100" step="1" placeholder="5000" class="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-4 focus:ring-gray-200 font-medium"/>
+							</div>
+							<p class="text-xs text-gray-500 mt-1">Minimum $100</p>
+						</div>
+
+						<div>
+							<label for="end_date" class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+								Campaign End Date *
+							</label>
+							<input type="date" id="end_date" name="end_date" required min="{{ 'tomorrow'|date('Y-m-d') }}" class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-4 focus:ring-gray-200 font-medium"/>
+							<p class="text-xs text-gray-500 mt-1">Choose a future date</p>
+						</div>
+					</div>
+
+					<div>
+						<label for="image" class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+							Project Image
+						</label>
+						<div id="image-preview-container" class="m-4 hidden transition-all duration-300 ease-in-out">
+							<div class="relative w-full h-64 border-2 border-black rounded-lg overflow-hidden bg-gray-100">
+								<img id="image-preview" src="#" alt="Preview" class="w-full h-full object-cover"/>
+							</div>
+						</div>
+						<div class="relative">
+							<input type="file" id="image" name="image" accept="image/*" class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-4 focus:ring-gray-200 font-medium file:mr-4 file:py-2 file:px-4 file:border-0 file:font-bold file:bg-black file:text-white hover:file:bg-gray-800 file:rounded file:cursor-pointer"/>
+						</div>
+						<p class="text-xs text-gray-500 mt-1">JPG, PNG, or GIF. Max 5MB. Recommended: 1200x600px</p>
+					</div>
+
+					<div class="pt-6 border-t-2 border-gray-200">
+						<div class="flex flex-col md:flex-row gap-4">
+							<button type="submit" class="flex-1 bg-black text-white font-bold text-lg py-4 rounded-lg hover:bg-gray-800 transition-all active:translate-y-1 active:shadow-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2">
+								<svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+								</svg>
+								Launch Project
+							</button>
+							<a href="{{ path('app_project_index') }}" class="flex-1 md:flex-initial bg-white text-black font-bold text-lg py-4 px-8 rounded-lg border-2 border-black hover:bg-gray-50 transition-all text-center">
+								Cancel
+							</a>
+						</div>
+					</div>
+
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		const imageInput = document.getElementById('image');
+const previewContainer = document.getElementById('image-preview-container');
+const previewImage = document.getElementById('image-preview');
+
+imageInput.addEventListener('change', function (e) {
+const file = e.target.files[0];
+
+if (file && file.size > 5 * 1024 * 1024) {
+alert('File size must be less than 5MB');
+e.target.value = '';
+previewContainer.classList.add('hidden');
+previewImage.src = '#';
+return;
+}
+
+if (file) {
+const reader = new FileReader();
+
+reader.onload = function (e) {
+previewImage.src = e.target.result;
+previewContainer.classList.remove('hidden');
+}
+
+reader.readAsDataURL(file);
+} else {
+previewImage.src = '#';
+previewContainer.classList.add('hidden');
+}
+});
+
+document.getElementById('end_date').addEventListener('change', function (e) {
+const selectedDate = new Date(e.target.value);
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+if (selectedDate <= today) {
+alert('End date must be in the future');
+e.target.value = '';
+}
+});
+	</script>
+{% endblock %}

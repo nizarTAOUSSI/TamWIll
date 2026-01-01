@@ -16,6 +16,31 @@
 				<p class="text-slate-500 mt-2">Support creativity and innovation</p>
 			</div>
 
+			<div class="max-w-7xl mx-auto mb-8">
+				<form method="get" action="{{ path('app_project_index') }}" class="flex gap-3">
+					<div class="flex-1 relative">
+						<input
+							type="text"
+							name="search"
+							value="{{ search }}"
+							placeholder="Search projects by name or description..."
+							class="w-full px-4 py-3 pl-12 border-2 border-black rounded-lg focus:outline-none focus:ring-4 focus:ring-gray-200 font-medium"
+						/>
+						<svg class="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+						</svg>
+					</div>
+					<button type="submit" class="px-6 py-3 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1">
+						Search
+					</button>
+					{% if search %}
+						<a href="{{ path('app_project_index') }}" class="px-6 py-3 bg-white border-2 border-black text-black font-bold rounded-lg hover:bg-gray-50 transition-all">
+							Clear
+						</a>
+					{% endif %}
+				</form>
+			</div>
+
 			<div class="box-border max-w-7xl mx-auto sm:columns-1 md:columns-2 lg:columns-3 xl:columns-3 gap-4">
 
 				{% for project in projects %}
@@ -23,7 +48,7 @@
 
 						<div class="flex pb-6 items-center justify-between">
 							<div class="flex items-center">
-								<img class="rounded-full max-w-none w-12 mr-4 h-12 object-cover" src="https://ui-avatars.com/api/?name={{ project.creator.name|url_encode }}&background=random" alt="{{ project.creator.name }}"/>
+								<img class="rounded-full max-w-none w-12 mr-4 h-12 object-cover" src="{{ project.creator.profilePicture ? asset('uploads/' ~ project.creator.profilePicture) : 'https://ui-avatars.com/api/?name=' ~ project.creator.name|url_encode ~ '&background=random' }}" alt="{{ project.creator.name }}"/>
 								<div class="flex flex-col">
 									<div>
 										<a class="inline-block text-lg font-bold text-slate-800" href="#">
@@ -97,7 +122,7 @@
 									{% for comment in projectComments[project.id] %}
 										<li class="flex items-start gap-2">
 											<div class="flex-shrink-0">
-												<img src="https://ui-avatars.com/api/?name={{ comment.author.name|url_encode }}&background=random" alt="{{ comment.author.name }}" class="w-8 h-8 rounded-full object-cover">
+												<img src="{{ comment.author.profilePicture ? asset('uploads/' ~ comment.author.profilePicture) : 'https://ui-avatars.com/api/?name=' ~ comment.author.name|url_encode ~ '&background=random' }}" alt="{{ comment.author.name }}" class="w-8 h-8 rounded-full object-cover">
 											</div>
 											<div class="flex-1">
 												<div class="bg-white rounded-lg px-3 py-2 shadow-sm">
@@ -116,11 +141,54 @@
 					</article>
 				{% else %}
 					<div class="col-span-3 text-center py-10">
-						<p class="text-xl text-slate-500">No projects found.</p>
+						<p class="text-xl text-slate-500">
+							{% if search %}
+								No projects found matching "{{ search }}".
+							{% else %}
+								No projects found.
+							{% endif %}
+						</p>
 					</div>
 				{% endfor %}
 
 			</div>
+
+			{% if totalPages > 1 %}
+				<div class="max-w-7xl mx-auto mt-12 mb-8">
+					<nav class="flex justify-center items-center gap-2">
+						{% if currentPage > 1 %}
+							<a href="{{ path('app_project_index', {page: currentPage - 1, search: search}) }}" class="px-4 py-2 border-2 border-black rounded-lg font-bold hover:bg-black hover:text-white transition-all">
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+								</svg>
+							</a>
+						{% endif %}
+
+						{% for page in 1..totalPages %}
+							{% if page == currentPage %}
+								<span class="px-4 py-2 bg-black text-white border-2 border-black rounded-lg font-bold">{{ page }}</span>
+							{% elseif page == 1 or page == totalPages or (page >= currentPage - 2 and page <= currentPage + 2) %}
+								<a href="{{ path('app_project_index', {page: page, search: search}) }}" class="px-4 py-2 border-2 border-black rounded-lg font-bold hover:bg-black hover:text-white transition-all">{{ page }}</a>
+							{% elseif page == currentPage - 3 or page == currentPage + 3 %}
+								<span class="px-2 text-gray-400">...</span>
+							{% endif %}
+						{% endfor %}
+
+						{% if currentPage < totalPages %}
+							<a href="{{ path('app_project_index', {page: currentPage + 1, search: search}) }}" class="px-4 py-2 border-2 border-black rounded-lg font-bold hover:bg-black hover:text-white transition-all">
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+								</svg>
+							</a>
+						{% endif %}
+					</nav>
+
+					<p class="text-center mt-4 text-sm text-gray-500">
+						Page {{ currentPage }} of {{ totalPages }}
+					</p>
+				</div>
+			{% endif %}
+
 		</div>
 	</div>
 {% endblock %}

@@ -1,0 +1,210 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard: {{ project.title }}{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gray-50 text-black font-sans py-12">
+        <div class="max-w-7xl mx-auto px-4 md:px-6">
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+                <div>
+                    <a href="{{ path('app_project_show', {id: project.id}) }}" class="text-sm font-bold text-gray-500 hover:text-black mb-2 inline-flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        Back to Project Page
+                    </a>
+                    <h1 class="text-4xl font-black tracking-tight">{{ project.title }}</h1>
+                    <p class="text-gray-600">Analytics & Fund Management</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    {% if userProjects|length > 1 %}
+                        <select onchange="window.location.href=this.value" class="px-4 py-2 border-2 border-black rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-black bg-white">
+                            {% for userProject in userProjects %}
+                                <option value="{{ path('app_dashboard_project', {id: userProject.id}) }}" {{ userProject.id == project.id ? 'selected' : '' }}>
+                                    {{ userProject.title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+                    <span class="px-3 py-1 border-2 border-black rounded-full text-xs font-bold uppercase {{ project.status == 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100' }}">
+                        {{ project.status }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                <div class="bg-white border-2 border-black p-6 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Total Raised</p>
+                    <p class="text-3xl font-black">${{ project.collectedAmount|number_format }}</p>
+                    <div class="w-full bg-gray-100 h-1.5 mt-3 rounded-full overflow-hidden">
+                        <div class="bg-black h-full" style="width: {{ min(project.collectedAmount / project.goalAmount * 100, 100) }}%"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">{{ (project.collectedAmount / project.goalAmount * 100)|round }}% of goal</p>
+                </div>
+
+                <div class="bg-white border-2 border-black p-6 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Total Backers</p>
+                    <p class="text-3xl font-black">{{ backerCount }}</p>
+                    <p class="text-xs text-green-600 font-bold mt-2 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        Latest activity
+                    </p>
+                </div>
+
+                <div class="bg-white border-2 border-black p-6 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Funding Goal</p>
+                    <p class="text-3xl font-black">${{ project.goalAmount|number_format }}</p>
+                    <p class="text-xs text-gray-400 mt-2">Fixed funding</p>
+                </div>
+
+                <div class="bg-white border-2 border-black p-6 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Time Remaining</p>
+                    <p class="text-3xl font-black">
+                        {% if project.endDate %}
+                            {{ date(project.endDate).diff(date('now')).days }}
+                        {% else %}
+                            ∞
+                        {% endif %}
+                    </p>
+                    <p class="text-xs text-gray-400 mt-2">Days</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                <div class="lg:col-span-2 space-y-8">
+
+                    <div class="bg-white border-2 border-black p-6 rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                        <h3 class="font-bold text-lg mb-6 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                            Funding Growth
+                        </h3>
+                        <div class="relative h-64 w-full">
+                            <canvas id="fundingChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-black text-white p-8 rounded-xl shadow-xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-gray-800 rounded-full blur-2xl opacity-50"></div>
+
+                        <h3 class="text-2xl font-black mb-2">Withdraw Funds</h3>
+                        <p class="text-gray-400 mb-6 max-w-md">Once your goal is reached, you can request a secure transfer to your bank account.</p>
+
+                        <div class="flex items-center gap-4">
+                            {% if project.collectedAmount >= project.goalAmount %}
+                                {% if project.payoutStatus == 'requested' %}
+                                    <div class="bg-yellow-500 text-black font-bold px-6 py-3 rounded-lg flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Processing Request...
+                                    </div>
+                                {% elseif project.payoutStatus == 'paid' %}
+                                    <div class="bg-green-500 text-black font-bold px-6 py-3 rounded-lg flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        Funds Paid Out
+                                    </div>
+                                {% else %}
+                                    <form action="{{ path('app_project_request_payout', {id: project.id}) }}" method="POST" class="flex-1 flex gap-3">
+                                        <input type="text" name="rib" placeholder="Enter RIB / Bank Account" required
+                                            class="flex-1 bg-gray-900 border border-gray-700 text-white rounded-lg px-4 focus:outline-none focus:border-white transition-colors" />
+                                        <button type="submit" class="bg-white text-black font-bold px-6 py-3 rounded-lg hover:bg-gray-200 transition-transform active:scale-95">
+                                            Request ${{ project.collectedAmount|number_format }}
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            {% else %}
+                                <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 w-full flex justify-between items-center">
+                                    <span class="text-gray-400 text-sm">Goal not reached yet</span>
+                                    <span class="font-bold text-gray-500">${{ (project.goalAmount - project.collectedAmount)|number_format }} more to go</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="lg:col-span-1">
+                    <div class="bg-white border-2 border-black p-6 rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                        <h3 class="font-bold text-lg mb-4 pb-4 border-b border-gray-100">Recent Backers</h3>
+                        <div class="space-y-4">
+                            {% for contribution in recentContributions %}
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gray-100 border border-black flex items-center justify-center font-bold text-sm">
+                                        {{ contribution.isAnonymous ? '?' : contribution.user.name|first|upper }}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-bold truncate">
+                                            {{ contribution.isAnonymous ? 'Anonymous' : contribution.user.name }}
+                                        </p>
+                                        <p class="text-xs text-gray-500">{{ contribution.createdAt|date('M d, H:i') }}</p>
+                                    </div>
+                                    <div class="font-mono font-bold text-sm">
+                                        +${{ contribution.amount }}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p class="text-gray-400 text-sm italic">No contributions yet.</p>
+                            {% endfor %}
+                        </div>
+                        <a href="{{ path('app_project_transactions', {id: project.id}) }}" class="block mt-6 text-center text-sm font-bold underline decoration-2 decoration-gray-300 hover:decoration-black transition-all">View All Transactions</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('fundingChart').getContext('2d');
+
+            const labels = {{ chartLabels|raw }};
+            const data = {{ chartValues|raw }};
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Raised ($)',
+                        data: data,
+                        borderColor: '#000000',
+                        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#000000',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#000',
+                            titleFont: { family: 'sans-serif' },
+                            bodyFont: { family: 'monospace' },
+                            padding: 10,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { borderDash: [2, 2], color: '#f3f4f6' },
+                            ticks: { font: { family: 'monospace' }, color: '#9ca3af' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'sans-serif', size: 11 }, color: '#9ca3af' }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

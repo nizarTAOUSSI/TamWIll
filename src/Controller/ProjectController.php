@@ -11,13 +11,37 @@ use App\Entity\Project;
 use App\Repository\CommentRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class ProjectController extends AbstractController
 {
     #[Route('/campaigns', name: 'app_project_index')]
-    public function index(ProjectRepository $projectRepository, CommentRepository $commentRepository): Response
+    public function index(Request $request, ProjectRepository $projectRepository, CommentRepository $commentRepository): Response
     {
-        $projects = $projectRepository->findBy([]);
+        $search = $request->query->get('search', '');
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = 6;
+        $offset = ($page - 1) * $limit;
+
+        if ($search) {
+            $qb = $projectRepository->createQueryBuilder('p')
+                ->where('p.title LIKE :search OR p.description LIKE :search')
+                ->setParameter('search', '%' . $search . '%')
+                ->orderBy('p.createdAt', 'DESC');
+
+            $totalProjects = count($qb->getQuery()->getResult());
+            $projects = $qb->setFirstResult($offset)
+                ->setMaxResults($limit)
+                ->getQuery()
+                ->getResult();
+        } else {
+            $totalProjects = $projectRepository->count([]);
+            $projects = $projectRepository->findBy([], ['createdAt' => 'DESC'], $limit, $offset);
+        }
+
+        $totalPages = ceil($totalProjects / $limit);
+
         $comments = $commentRepository->findBy([]);
         $projectComments = [];
         foreach ($projects as $project) {
@@ -29,9 +53,13 @@ class ProjectController extends AbstractController
                 $projectComments[$pid][] = $comment;
             }
         }
+
         return $this->render('project/index.html.twig', [
             'projects' => $projects,
             'projectComments' => $projectComments,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'search' => $search,
         ]);
     }
 
@@ -62,6 +90,71 @@ class ProjectController extends AbstractController
             return $this->redirect($referer);
         }
         return $this->redirectToRoute('app_project_index');
+    }
+
+    #[Route('/project/create', name: 'app_project_create')]
+    public function create(Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
+    {
+        if (!$this->getUser()) {
+            return $this->redirectToRoute('app_login', ['login' => 'true']);
+        }
+
+        if ($request->isMethod('POST')) {
+            $title = $request->request->get('title');
+            $description = $request->request->get('description');
+            $goalAmount = $request->request->get('goal_amount');
+            $endDate = $request->request->get('end_date');
+            $imageFile = $request->files->get('image');
+
+            if (empty($title) || empty($description) || empty($goalAmount) || empty($endDate)) {
+                $this->addFlash('error', 'All fields are required.');
+                return $this->render('project/create.html.twig');
+            }
+
+            if ($goalAmount < 100) {
+                $this->addFlash('error', 'Minimum goal amount is $100.');
+                return $this->render('project/create.html.twig');
+            }
+
+            $project = new Project();
+            $project->setTitle($title);
+            $project->setDescription($description);
+            $project->setGoalAmount($goalAmount);
+            $project->setStartDate(new \DateTime());
+            $project->setEndDate(new \DateTime($endDate));
+            $project->setCreator($this->getUser());
+            $project->setStatus('active');
+
+            if ($imageFile) {
+                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $slugger->slug($originalFilename);
+                $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+
+                try {
+                    $imageFile->move(
+                        $this->getParameter('kernel.project_dir').'/public/uploads/projects',
+                        $newFilename
+                    );
+                    $project->setImage('/uploads/projects/'.$newFilename);
+                } catch (FileException $e) {
+                    $this->addFlash('error', 'Failed to upload image.');
+                }
+            }
+
+            /** @var \App\Entity\User $user */
+            $user = $this->getUser();
+            if ($user->getRole() === 'ROLE_USER') {
+                $user->setRole('ROLE_CREATOR');
+            }
+
+            $em->persist($project);
+            $em->flush();
+
+            $this->addFlash('success', 'Project created successfully!');
+            return $this->redirectToRoute('app_dashboard_project', ['id' => $project->getId()]);
+        }
+
+        return $this->render('project/create.html.twig');
     }
 
     #[Route('/project/{id}', name: 'app_project_show')]

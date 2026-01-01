@@ -16,7 +16,8 @@
 								<div class="card-content bg-black/40 hover:bg-black/60 transition-colors h-full w-full p-6 flex flex-col justify-end text-white">
 									<div class="card-title text-2xl font-bold">{{ project.title }}</div>
 									<div class="card-description text-sm text-gray-200 mb-2">{{ project.description }}</div>
-									<button class="bg-yellow-500 text-black px-4 py-1 cursor-pointer rounded font-bold text-sm w-fit mt-2">Donate ${{ project.goalAmount }}</button>
+									<button onclick="{{ not app.user ? 'window.openModal(false)' : 'window.location.href=\'/project/' ~ project.id ~ '\';' }}" class="bg-yellow-500 text-black px-4 py-1 cursor-pointer rounded font-bold text-sm w-fit mt-2">Donate ${{ project.goalAmount }}
+									</button>
 								</div>
 							</div>
 						{% endif %}
@@ -27,7 +28,7 @@
 								<div class="card-content bg-teal-900/80 hover:bg-teal-900/90 transition-colors h-full w-full p-4 flex flex-col justify-end text-white">
 									<div class="card-title font-bold leading-tight mb-1">{{ project.title }}</div>
 									<div class="text-xs text-gray-300 mb-2">{{ project.description|slice(0, 40) }}...</div>
-									<button class="bg-white text-teal-900 px-3 py-1 cursor-pointer rounded font-bold text-xs w-full">Donate</button>
+									<button onclick="{{ not app.user ? 'window.openModal(false)' : 'window.location.href=\'/project/' ~ project.id ~ '\';' }}" class="bg-white text-teal-900 px-3 py-1 cursor-pointer rounded font-bold text-xs w-full">Donate</button>
 								</div>
 							</div>
 						{% endif %}
@@ -41,7 +42,7 @@
 
 									<div class="flex justify-between items-end">
 										<span class="text-xs bg-indigo-500 px-2 py-1 rounded">{{ project.status }}</span>
-										<button class="bg-yellow-400 text-black px-4 py-2 cursor-pointer rounded font-bold text-xs shadow-lg">Donate</button>
+										<button onclick="{{ not app.user ? 'window.openModal(false)' : 'window.location.href=\'/project/' ~ project.id ~ '\';' }}" class="bg-yellow-400 text-black px-4 py-2 cursor-pointer rounded font-bold text-xs shadow-lg">Donate</button>
 									</div>
 								</div>
 							</div>
