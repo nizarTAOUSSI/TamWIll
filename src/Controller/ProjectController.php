@@ -67,10 +67,61 @@ class ProjectController extends AbstractController
     #[Route('/project/{id}', name: 'app_project_show')]
     public function show(Project $project): Response
     {
-        $comments = $project->getComments();
+        $contributions = $project->getContributions()
+            ->filter(function ($contribution) {
+                return $contribution->getPaymentStatus() === 'paid';
+            })
+            ->toArray();
+
+        usort($contributions, function ($a, $b) {
+            return $b->getCreatedAt() <=> $a->getCreatedAt();
+        });
+
+        $userContributions = [];
+        $anonIndex = 1;
+
+        foreach ($contributions as $contribution) {
+            $user = $contribution->getUser();
+
+            $isAnonymous = method_exists($contribution, 'isIsAnonymous') ? $contribution->isIsAnonymous() : false;
+
+            if ($isAnonymous || $user === null) {
+                $userId = 'anon_' . $anonIndex++;
+
+                $userContributions[$userId] = [
+                    'user' => null,
+                    'amount' => $contribution->getAmount(),
+                    'isAnonymous' => true,
+                    'createdAt' => $contribution->getCreatedAt(),
+                ];
+            } else {
+                $userId = $user->getId();
+
+                if (!isset($userContributions[$userId])) {
+                    $userContributions[$userId] = [
+                        'user' => $user,
+                        'amount' => 0,
+                        'isAnonymous' => false,
+                        'createdAt' => $contribution->getCreatedAt(),
+                    ];
+                }
+
+                $userContributions[$userId]['amount'] += $contribution->getAmount();
+            }
+        }
+
+        usort($userContributions, function ($a, $b) {
+            return $b['amount'] <=> $a['amount'];
+        });
+
+        $topContributions = array_slice($userContributions, 0, 3);
+        $recentContributions = array_slice($contributions, 0, 5);
+
         return $this->render('project/show.html.twig', [
             'project' => $project,
-            'comments' => $comments,
+            'comments' => $project->getComments(),
+            'contributions' => $recentContributions,
+            'topContributions' => $topContributions,
         ]);
     }
 }

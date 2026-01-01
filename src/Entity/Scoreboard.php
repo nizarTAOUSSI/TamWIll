@@ -14,7 +14,6 @@ class Scoreboard
     #[ORM\Column]
     private ?int $id = null;
 
-    // "rank" is a reserved keyword in SQL (MySQL 8+), so we map it to "rank_position"
     #[ORM\Column(name: 'rank_position')]
     private ?int $rank = null;
 

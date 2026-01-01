@@ -1,0 +1,51 @@
+{% block body %}
+	<div id="donationModal" class="fixed inset-0 z-[999] hidden">
+		<div class="absolute inset-0 bg-white/80 backdrop-blur-md transition-opacity" onclick="toggleModal(false)"></div>
+
+		<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-4 animate-in fade-in zoom-in-95 duration-200">
+			<div class="bg-white border-2 border-black rounded-2xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
+
+				<button onclick="toggleModal(false)" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewbox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+					</svg>
+				</button>
+
+				<h2 class="text-2xl font-black mb-2 tracking-tight">Make a contribution</h2>
+				<p class="text-gray-500 mb-8 text-sm">You are supporting
+					<strong>{{ project.title }}</strong>.</p>
+
+				<form action="{{ path('app_payment_checkout', {id: project.id}) }}" method="POST">
+					<div class="text-center mb-8">
+						<div class="inline-flex items-baseline justify-center gap-1">
+							<span class="text-2xl font-bold text-gray-400">$</span>
+							<span class="text-6xl font-black text-black tracking-tighter" id="amountDisplay">50</span>
+						</div>
+					</div>
+
+					<div class="mb-8 px-2">
+						<input type="range" id="donationRange" name="amount" min="5" max="1000" value="50" step="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2" oninput="updateAmount(this.value)">
+						<div class="flex justify-between text-xs font-bold text-gray-400 mt-3 font-mono">
+							<span>$5</span>
+							<span>$1000+</span>
+						</div>
+					</div>
+
+					<div class="flex items-center mb-8 bg-gray-50 p-4 rounded-lg border border-gray-100">
+						<input id="is_anonymous" name="is_anonymous" type="checkbox" class="w-5 h-5 text-black border-gray-300 rounded focus:ring-black">
+						<label for="is_anonymous" class="ml-3 block text-sm text-gray-700 font-bold select-none cursor-pointer">
+							Keep my donation anonymous
+						</label>
+					</div>
+
+					<button type="submit" class="w-full cursor-pointer bg-black text-white font-bold text-lg py-4 rounded-xl hover:bg-gray-900 transition flex justify-center items-center gap-2 group shadow-xl">
+						<span>Proceed to Pay</span>
+						<svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+						</svg>
+					</button>
+				</form>
+			</div>
+		</div>
+	</div>
+{% endblock %}

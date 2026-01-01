@@ -24,18 +24,43 @@
 
 		<div class="flex items-center justify-center gap-3 mr-5">
 			{% if app.user %}
-				<div class="flex justify-center items-center gap-3">
-					<img class="rounded-full max-w-none w-10 h-10 object-cover" src="https://ui-avatars.com/api/?name={{ app.user.name|url_encode }}&background=random" alt="{{ app.user.name }}"/>
-					<form method="post" action="{{ path('app_logout') }}" class="flex justify-center items-center">
-						<input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
-						<button class="hover:scale-110 hover:text-red-600 cursor-pointer">
-							<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewbox="0 0 512 512" height="30px" width="30px" xmlns="http://www.w3.org/2000/svg">
-								<path d="M192 277.4h189.7l-43.6 44.7L368 352l96-96-96-96-31 29.9 44.7 44.7H192v42.8z"></path>
-								<path d="M255.7 421.3c-44.1 0-85.5-17.2-116.7-48.4-31.2-31.2-48.3-72.7-48.3-116.9 0-44.1 17.2-85.7 48.3-116.9 31.2-31.2 72.6-48.4 116.7-48.4 44 0 85.3 17.1 116.5 48.2l30.3-30.3c-8.5-8.4-17.8-16.2-27.7-23.2C339.7 61 298.6 48 255.7 48 141.2 48 48 141.3 48 256s93.2 208 207.7 208c42.9 0 84-13 119-37.5 10-7 19.2-14.7 27.7-23.2l-30.2-30.2c-31.1 31.1-72.5 48.2-116.5 48.2zM448.004 256.847l-.849-.848.849-.849.848.849z"></path>
-							</svg>
-						</button>
-					</form>
-				</div>
+                <div class="relative group">
+
+                    <button class="flex items-center gap-2 focus:outline-none group">
+                        <span class="hidden md:block font-bold text-sm mr-1">{{ app.user.name }}</span>
+                        <img class="rounded-full w-10 h-10 object-cover border-2 border-transparent group-hover:border-black transition-all duration-200" src="https://ui-avatars.com/api/?name={{ app.user.name|url_encode }}&background=000&color=fff" alt="{{ app.user.name }}"/>
+                        <svg class="w-4 h-4 text-gray-500 group-hover:text-black transition-transform duration-200 group-focus:rotate-180" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+
+                    <div class="absolute right-0 mt-2 w-48 bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50 transform origin-top-right">
+
+                        <div class="block px-4 py-3 border-b border-gray-100 md:hidden">
+                            <p class="text-sm text-gray-500">Logged in as</p>
+                            <p class="text-sm font-bold truncate">{{ app.user.name }}</p>
+                        </div>
+
+                        <a href="#" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-black hover:font-bold transition-colors">
+                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            My Profile
+                        </a>
+
+                        <div class="border-t border-gray-100 my-1"></div>
+
+                        <form method="post" action="{{ path('app_logout') }}" class="block w-full">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                            <button type="submit" class="flex w-full items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 font-medium transition-colors text-left">
+                                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
 			{% else %}
 				<button class="hover:scale-110 cursor-pointer">
 					<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewbox="0 0 320 512" height="20px" width="20px" xmlns="http://www.w3.org/2000/svg">

@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+	<div class="min-h-screen bg-white text-black py-12 px-4">
+		<div class="max-w-xl mx-auto">
+
+			<div class="mb-8 text-center">
+				<h1 class="text-3xl font-black mb-2">Complete your contribution</h1>
+				<p class="text-gray-500">
+					You are donating
+					<span class="font-bold text-black">${{ amount }}</span>
+					to
+					<span class="font-bold text-black">{{ project.title }}</span>
+				</p>
+			</div>
+
+			<div class="bg-white border-2 border-black rounded-xl p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative">
+
+				<form id="payment-form">
+					<div id="payment-element"></div>
+
+					<div id="payment-message" class="hidden mt-4 p-3 bg-red-50 text-red-600 text-sm font-bold border border-red-200 rounded"></div>
+
+					<button id="submit" class="w-full cursor-pointer mt-8 bg-black text-white font-bold text-lg py-4 rounded-lg hover:bg-gray-800 transition-all active:translate-y-1 active:shadow-none shadow-lg flex justify-center items-center gap-2">
+						<span id="button-text">Pay ${{ amount }}</span>
+						<div id="spinner" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+					</button>
+				</form>
+
+				<div class="mt-6 text-center">
+					<a href="{{ path('app_project_show', {id: project.id}) }}" class="text-sm text-gray-400 hover:text-black font-bold underline">Cancel and go back</a>
+				</div>
+			</div>
+
+			<div class="mt-8 flex justify-center items-center gap-2 text-gray-400 text-xs uppercase font-bold tracking-widest">
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+				</svg>
+				Secure Payment via Stripe
+			</div>
+		</div>
+	</div>
+
+	<script src="https://js.stripe.com/v3/"></script>
+	<script>
+const stripe = Stripe("{{ stripePublicKey }}");
+const clientSecret = "{{ clientSecret }}";
+
+const appearance = {
+theme: 'stripe',
+variables: {
+colorPrimary: '#000000',
+colorBackground: '#ffffff',
+colorText: '#000000',
+fontFamily: '"Roboto", sans-serif',
+spacingUnit: '4px',
+borderRadius: '8px'
+},
+rules: {
+'.Input': {
+border: '2px solid #e5e7eb',
+boxShadow: 'none'
+},
+'.Input:focus': {
+border: '2px solid #000000',
+boxShadow: 'none'
+}
+}
+};
+
+const elements = stripe.elements({appearance, clientSecret});
+const paymentElement = elements.create("payment");
+paymentElement.mount("#payment-element");
+
+const form = document.getElementById("payment-form");
+
+form.addEventListener("submit", async (e) => {
+e.preventDefault();
+setLoading(true);
+
+const {error} = await stripe.confirmPayment({
+elements,
+confirmParams: {
+return_url: "{{ url('app_payment_success', {contributionId: contribution.id}) }}"
+}
+});
+
+if (error) {
+showMessage(error.message);
+setLoading(false);
+}
+});
+
+function setLoading(isLoading) {
+if (isLoading) {
+document.querySelector("#submit").disabled = true;
+document.querySelector("#spinner").classList.remove("hidden");
+document.querySelector("#button-text").classList.add("hidden");
+} else {
+document.querySelector("#submit").disabled = false;
+document.querySelector("#spinner").classList.add("hidden");
+document.querySelector("#button-text").classList.remove("hidden");
+}
+}
+
+function showMessage(messageText) {
+const messageContainer = document.querySelector("#payment-message");
+messageContainer.classList.remove("hidden");
+messageContainer.textContent = messageText;
+}
+	</script>
+{% endblock %}

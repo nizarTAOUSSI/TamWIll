@@ -103,14 +103,14 @@ class Project
         return $this;
     }
 
-    public function getCollectedAmount(): ?string
+    public function getCollectedAmount(): float
     {
-        return $this->collectedAmount;
+        return (float) $this->collectedAmount;
     }
 
-    public function setCollectedAmount(?string $collectedAmount): static
+    public function setCollectedAmount(float $amount): self
     {
-        $this->collectedAmount = $collectedAmount;
+        $this->collectedAmount = (string) $amount;
         return $this;
     }
 
