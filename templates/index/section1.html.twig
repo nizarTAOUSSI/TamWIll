@@ -1,27 +1,27 @@
 {% block body %}
 	<div class="flex justify-start items-start p-10 gap-5 w-full">
 		<div class="bg-cover bg-center bg-no-repeat flex items-center shadow-lg rounded-2xl" style="background-image: url('{{ asset('hands.png') }}');">
-			<div class=" mt-[500px] w-[550px] h-64 bg-white rounded-2xl m-5">
-				<div class="flex items-center justify-between">
-					<div class="bg-gray-300 m-5 rounded-4xl flex gap-4 items-center justify-between px-4 py-2">
-						<div class="bg-black h-2 w-2 rounded-full"></div>
-						<p class="text-sm">{{progress}}
-							% Porgress</p>
-					</div>
-					<div class="mr-20">
-						<h3 class="text-2xl font-sm text-dark-700 ml-3">$
-							{{goal}}</h3>
-					</div>
-
-				</div>
+			<div class=" mt-[500px] w-[550px] h-68 bg-white rounded-2xl m-5">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="bg-gradient-to-r from-gray-200 via-gray-300 to-gray-400 shadow-md m-3 rounded-3xl flex gap-4 items-center px-6 py-3">
+                        <div class="bg-black h-2 w-2 rounded-full"></div>
+                        <p class="text-base font-medium text-gray-800 tracking-wide">+{{ progress }} Campaigns</p>
+                    </div>
+                    <div class="flex flex-col items-end mr-20">
+                        <span class="uppercase text-xs text-gray-500 tracking-wider mb-1">Total Raised</span>
+                        <h3 class="text-3xl font-bold text-black ml-3 drop-shadow">$ {{ goal }}</h3>
+                    </div>
+                </div>
 				<div class="flex items-center">
 					<img src="https://tse2.mm.bing.net/th/id/OIP.TEsj6KR1RPjPVSPedGOX1AHaEO?rs=1&pid=ImgDetMain&o=7&rm=3" class="h-40 rounded-2xl ml-5">
 					<div>
 						<h2 class="text-2xl font-semibold text-dark-700 ml-5">Your Kindnes</h2>
 						<h2 class="text-2xl font-semibold text-dark-700 ml-5">Creates Real Change</h2>
-						<button class="bg-gray-900 text-white px-6 py-2 rounded-md ml-5 mt-3 hover:bg-black hover:scale-110 cursor-pointer transition duration-300">
-							Donate Now
-						</button>
+						<a href="{{ path('app_project_index') }}">
+							<button class="bg-gray-900 text-white px-6 py-2 rounded-md ml-5 mt-3 hover:bg-black hover:scale-110 cursor-pointer transition duration-300">
+								Donate Now
+							</button>
+						</a>
 					</div>
 				</div>
 
@@ -42,13 +42,13 @@
 			</div>
 			<p class="text-dark-700 text-lg px-10">
 				Join us in making a difference! Your generous donations help transform lives and bring hope to those in need. Together, we can create a brighter future for all.
-				Every contribution, big or small, supports vital programs and empowers communities. Stand with us to spread kindness, uplift those facing challenges, and inspire positive change. Your support truly matters!
+								Every contribution, big or small, supports vital programs and empowers communities. Stand with us to spread kindness, uplift those facing challenges, and inspire positive change. Your support truly matters!
 			</p>
 			<div>
 				{% if app.user %}
-						<button type="button" class="bg-gray-900 text-white px-12 py-2 rounded-4xl ml-10 mt-3 hover:bg-black hover:scale-110 cursor-pointer transition duration-300">
-							Start a Campaign
-						</button>
+					<a href="{{ path('app_project_create') }}" class="bg-gray-900 text-white px-12 py-2 rounded-4xl ml-10 mt-3 hover:bg-black hover:scale-110 cursor-pointer transition duration-300">
+						Start a Campaign
+					</a>
 				{% else %}
 					<button id="open-login-modal" type="button" class="bg-gray-900 text-white px-12 py-2 rounded-4xl ml-10 mt-3 hover:bg-black hover:scale-110 cursor-pointer transition duration-300">
 						Sign In Now

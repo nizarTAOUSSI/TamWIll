@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Transactions - {{ project.title }}{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gray-50 text-black font-sans py-12">
+        <div class="max-w-7xl mx-auto px-4 md:px-6">
+
+            <div class="mb-10">
+                <a href="{{ path('app_dashboard_project', {id: project.id}) }}" class="text-sm font-bold text-gray-500 hover:text-black mb-2 inline-flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Back to Dashboard
+                </a>
+                <h1 class="text-4xl font-black tracking-tight">All Transactions</h1>
+                <p class="text-gray-600">{{ project.title }}</p>
+            </div>
+
+            <div class="bg-white border-2 border-black rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+
+                <div class="p-6 border-b-2 border-black bg-gray-50">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-black">Transaction History</h2>
+                            <p class="text-sm text-gray-600 mt-1">Total: {{ contributions|length }} contributions</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-500 uppercase tracking-wide font-bold">Total Collected</p>
+                            <p class="text-3xl font-black">${{ project.collectedAmount|number_format }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-black text-white">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Backer</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Amount</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Payment Method</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for contribution in contributions %}
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-bold">{{ contribution.createdAt|date('M d, Y') }}</div>
+                                        <div class="text-xs text-gray-500">{{ contribution.createdAt|date('H:i') }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-gray-100 border border-black flex items-center justify-center font-bold text-sm">
+                                                {{ contribution.isAnonymous ? '?' : contribution.user.name|first|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-bold">
+                                                    {{ contribution.isAnonymous ? 'Anonymous' : contribution.user.name }}
+                                                </div>
+                                                {% if not contribution.isAnonymous %}
+                                                    <div class="text-xs text-gray-500">{{ contribution.user.email }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-lg font-black font-mono">${{ contribution.amount|number_format(2) }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if contribution.paymentStatus == 'paid' %}
+                                            <span class="px-3 py-1 bg-green-100 text-green-800 border-2 border-green-600 rounded-full text-xs font-bold uppercase">
+                                                Paid
+                                            </span>
+                                        {% elseif contribution.paymentStatus == 'pending' %}
+                                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 border-2 border-yellow-600 rounded-full text-xs font-bold uppercase">
+                                                Pending
+                                            </span>
+                                        {% else %}
+                                            <span class="px-3 py-1 bg-gray-100 text-gray-800 border-2 border-gray-600 rounded-full text-xs font-bold uppercase">
+                                                {{ contribution.paymentStatus }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if contribution.payment %}
+                                            <div class="flex items-center gap-2">
+                                                {% if contribution.payment.provider == 'Stripe Elements' %}
+                                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" stroke-width="2"/>
+                                                        <line x1="1" y1="10" x2="23" y2="10" stroke-width="2"/>
+                                                    </svg>
+                                                    <span class="text-sm font-bold">Stripe</span>
+                                                {% elseif contribution.payment.provider == 'PayPal' %}
+                                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.77.77 0 0 1 .76-.653h8.025c2.963 0 4.972 1.154 5.778 3.345.823 2.237.096 4.791-2.032 6.358-1.185.87-2.776 1.308-4.73 1.308H9.928a.77.77 0 0 0-.761.653l-1.024 6.606a.641.641 0 0 1-.633.653z"/>
+                                                    </svg>
+                                                    <span class="text-sm font-bold">PayPal</span>
+                                                {% else %}
+                                                    <span class="text-sm font-bold">{{ contribution.payment.provider }}</span>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-xs text-gray-400">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="px-6 py-12 text-center">
+                                        <div class="flex flex-col items-center gap-3">
+                                            <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                            <p class="text-gray-400 font-bold">No transactions yet</p>
+                                            <p class="text-sm text-gray-400">Contributions will appear here once backers support your project.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if contributions|length > 0 %}
+                    <div class="p-6 border-t-2 border-black bg-gray-50">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-white border-2 border-black rounded-lg p-4 text-center">
+                                <p class="text-xs text-gray-500 uppercase tracking-wide font-bold mb-1">Paid Contributions</p>
+                                <p class="text-2xl font-black">{{ contributions|filter(c => c.paymentStatus == 'paid')|length }}</p>
+                            </div>
+                            <div class="bg-white border-2 border-black rounded-lg p-4 text-center">
+                                <p class="text-xs text-gray-500 uppercase tracking-wide font-bold mb-1">Pending Contributions</p>
+                                <p class="text-2xl font-black">{{ contributions|filter(c => c.paymentStatus == 'pending')|length }}</p>
+                            </div>
+                            <div class="bg-white border-2 border-black rounded-lg p-4 text-center">
+                                <p class="text-xs text-gray-500 uppercase tracking-wide font-bold mb-1">Average Contribution</p>
+                                <p class="text-2xl font-black">${{ contributions|length > 0 ? (project.collectedAmount / contributions|length)|number_format(2) : 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

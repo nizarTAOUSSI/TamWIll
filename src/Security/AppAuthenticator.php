@@ -2,6 +2,7 @@
 
 namespace App\Security;
 
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -44,11 +45,15 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        $session = $request->getSession();
+        if ($session instanceof \Symfony\Component\HttpFoundation\Session\Session) {
+            $session->getFlashBag()->add('success', 'Welcome back! You have successfully signed in.');
+        }
+
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
             return new RedirectResponse($targetPath);
         }
 
-        // After login, keep the user on the login page so the greeting is shown there
         return new RedirectResponse($this->urlGenerator->generate(self::LOGIN_ROUTE));
     }
 
