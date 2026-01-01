@@ -1,0 +1,1022 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+{% block title %}Admin Dashboard - TamWill{% endblock %}
+
+{% block stylesheets %}
+<style>
+  /* Small admin styles */
+  .sidebar { width: 220px; z-index: 1; }
+  .main { margin-left: 220px; padding-bottom: 6rem; } /* ensure footer does not overlap admin content */
+  .card { border-radius: 8px; }
+  .table-fixed { table-layout: fixed; width: 100%; }
+  .modal-backdrop { background: rgba(0,0,0,0.45); }
+  
+  /* Ensure navbar is above admin content */
+  nav { position: relative; z-index: 100; background-color: white; }
+</style>
+{% endblock %}
+
+
+<div class="flex min-h-screen bg-gray-50 text-gray-800"> <!-- changed h-screen to min-h-screen to let footer sit below -->
+  <!-- Sidebar -->
+  <aside class="sidebar bg-white shadow-md fixed inset-y-0 left-0 p-6">
+    <div class="mb-8">
+      <h2 class="text-xl font-bold">Admin</h2>
+      <p class="text-sm text-gray-500">TamWill dashboard</p>
+    </div>
+    <nav class="space-y-2">
+      <a href="#" class="block py-2 px-3 rounded hover:bg-gray-100 font-medium">Dashboard</a>
+      <a href="#projects" class="block py-2 px-3 rounded hover:bg-gray-100">Projects</a>
+      <a href="#users" class="block py-2 px-3 rounded hover:bg-gray-100">Users</a>
+      <a href="#donations" class="block py-2 px-3 rounded hover:bg-gray-100">Donations</a>
+      <div class="border-t border-gray-200 my-2"></div>
+      <a href="{{ path('TamWill') }}" class="block py-2 px-3 rounded hover:bg-gray-100 text-blue-600">Home Page</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main flex-1 min-h-screen p-8">
+    <!-- Top header with title and date filter -->
+    <header class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-1">Overview and statistics</p>
+      </div>
+      
+      <!-- Date Filter -->
+      <div class="flex items-center gap-3 bg-white px-4 py-3 rounded-lg shadow-sm border border-gray-200">
+        <label class="text-sm font-medium text-gray-700">Filter by:</label>
+        <select id="dateFilter" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="all">All Time</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month" selected>This Month</option>
+          <option value="year">This Year</option>
+          <option value="custom">Custom Range</option>
+        </select>
+        
+        <!-- Custom date range inputs (hidden by default) -->
+        <div id="customDateRange" class="hidden flex items-center gap-2">
+          <input type="date" id="startDate" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <span class="text-gray-500">to</span>
+          <input type="date" id="endDate" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <button id="applyCustomDate" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors">Apply</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Total Users Card -->
+      <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-blue-100 text-sm font-medium mb-1">Total Users</p>
+            <h3 class="text-3xl font-bold" id="stat-users">{{ totals.users|number_format(0, '.', ',') }}</h3>
+            <p class="text-blue-100 text-xs mt-2">
+              <span id="users-change" class="font-semibold">—</span>
+            </p>
+          </div>
+          <div class="bg-white bg-opacity-20 rounded-full p-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Projects Card -->
+      <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-green-100 text-sm font-medium mb-1">Total Projects</p>
+            <h3 class="text-3xl font-bold" id="stat-projects">{{ totals.projects|number_format(0, '.', ',') }}</h3>
+            <p class="text-green-100 text-xs mt-2">
+              <span id="projects-change" class="font-semibold">—</span>
+            </p>
+          </div>
+          <div class="bg-white bg-opacity-20 rounded-full p-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Donations Card -->
+      <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-purple-100 text-sm font-medium mb-1">Total Donations</p>
+            <h3 class="text-3xl font-bold" id="stat-donations">{{ totals.donations|number_format(2, '.', ',') }}€</h3>
+            <p class="text-purple-100 text-xs mt-2">
+              <span id="donations-change" class="font-semibold">—</span>
+            </p>
+          </div>
+          <div class="bg-white bg-opacity-20 rounded-full p-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Comments Card -->
+      <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform duration-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-orange-100 text-sm font-medium mb-1">Total Comments</p>
+            <h3 class="text-3xl font-bold" id="stat-comments">{{ totals.comments|number_format(0, '.', ',') }}</h3>
+            <p class="text-orange-100 text-xs mt-2">
+              <span id="comments-change" class="font-semibold">—</span>
+            </p>
+          </div>
+          <div class="bg-white bg-opacity-20 rounded-full p-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- Projects Section -->
+    <section id="projects" class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold">Projects</h2>
+        <div class="flex items-center space-x-3">
+          <label class="text-sm text-gray-600">Sort:</label>
+          <select id="projectSort" class="border rounded p-1 text-sm">
+            <option value="donations_desc">Donations (descending)</option>
+            <option value="donations_asc">Donations (ascending)</option>
+            <option value="created_desc">Created (newest)</option>
+            <option value="created_asc">Created (oldest)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="bg-white shadow overflow-hidden rounded">
+        <table class="table-fixed w-full text-left">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="p-3 w-1/4">Project</th>
+              <th class="p-3">Creator</th>
+              <th class="p-3">Donations</th>
+              <th class="p-3">Status</th>
+              <th class="p-3">Created</th>
+              <th class="p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="projectsTable">
+            {% for p in projects %}
+            <tr data-donations="{{ p.donations }}" data-created="{{ p.createdAt }}">
+              <td class="p-3 font-medium">{{ p.name }}</td>
+              <td class="p-3">{{ p.creator }}</td>
+              <td class="p-3">{{ p.donations|number_format(2, '.', ',') }} €</td>
+              <td class="p-3">
+                <select class="project-status-select border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" data-project-id="{{ p.id }}">
+                  <option value="draft" {{ p.status == 'draft' ? 'selected' : '' }}>Draft</option>
+                  <option value="published" {{ p.status == 'published' ? 'selected' : '' }}>Published</option>
+                  <option value="archived" {{ p.status == 'archived' ? 'selected' : '' }}>Archived</option>
+                </select>
+              </td>
+              <td class="p-3">{{ p.createdAt }}</td>
+              <td class="p-3">
+                <div class="flex items-center space-x-2">
+                  <!-- Edit icon (black, turns blue on hover) -->
+                  <button type="button"
+                          class="project-action-icon edit-icon inline-flex items-center justify-center w-9 h-9 rounded hover:bg-blue-50 open-project-edit"
+                          data-id="{{ p.id }}"
+                          data-title="{{ p.name }}"
+                          data-description="{{ p.description }}"
+                          data-status="{{ p.status }}"
+                          data-csrf="{{ csrf_token('edit-project' ~ p.id) }}"
+                          title="Edit project">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-black transition-colors duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M4 13.5V20h6.5L20.873 9.627a2 2 0 000-2.828L18.373 4.83a2 2 0 00-2.828 0L4 16.375z" />
+                    </svg>
+                  </button>
+
+                  <!-- Delete icon (black, turns red on hover) -->
+                  <button type="button" class="project-action-icon delete-project inline-flex items-center justify-center w-9 h-9 rounded hover:bg-red-50 text-black" data-project-id="{{ p.id }}" title="Delete project">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-colors duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                    </svg>
+                  </button>
+
+                  <button type="button" class="show-comments bg-blue-500 text-white px-3 py-1 rounded text-sm cursor-pointer" data-project-id="{{ p.id }}">Show Comments</button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Users Section -->
+    <section id="users" class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold">Users</h2>
+        <div class="flex items-center space-x-3">
+          <label class="text-sm text-gray-600">Sort:</label>
+          <select id="userSort" class="border rounded p-1 text-sm">
+            <option value="name_asc">Name (A-Z)</option>
+            <option value="name_desc">Name (Z-A)</option>
+            <option value="registered_desc">Registered (newest)</option>
+            <option value="registered_asc">Registered (oldest)</option>
+          </select>
+        </div>
+      </div>
+      <div class="bg-white shadow overflow-hidden rounded">
+        <table class="table-fixed w-full text-left">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="p-3">Name</th>
+              <th class="p-3">Email</th>
+              <th class="p-3">Role</th>
+              <th class="p-3">Status</th>
+              <th class="p-3">Registered</th>
+              <th class="p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable">
+            {% for u in users %}
+            <tr data-name="{{ u.name }}" data-registered="{{ u.registeredAt }}">
+              <td class="p-3 font-medium">{{ u.name }}</td>
+              <td class="p-3">{{ u.email }}</td>
+              <td class="p-3">
+                <select class="user-role-select border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" data-user-id="{{ u.id }}">
+                  <option value="user" {{ u.roles == 'user' ? 'selected' : '' }}>User</option>
+                  <option value="admin" {{ u.roles == 'admin' ? 'selected' : '' }}>Admin</option>
+                </select>
+              </td>
+              <td class="p-3">
+                <select class="user-status-select border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" data-user-id="{{ u.id }}">
+                  <option value="active" {{ u.status == 'active' ? 'selected' : '' }}>Active</option>
+                  <option value="banned" {{ u.status != 'active' ? 'selected' : '' }}>Banned</option>
+                </select>
+              </td>
+              <td class="p-3">{{ u.registeredAt }}</td>
+              <td class="p-3">
+                <div class="flex items-center space-x-2">
+                  <!-- Edit icon (black, turns blue on hover) -->
+                  <button type="button"
+                          class="user-action-icon edit-icon inline-flex items-center justify-center w-9 h-9 rounded hover:bg-blue-50 open-user-edit"
+                          data-id="{{ u.id }}"
+                          data-name="{{ u.name }}"
+                          data-email="{{ u.email }}"
+                          data-csrf="{{ csrf_token('edit-user' ~ u.id) }}"
+                          title="Edit user">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-black transition-colors duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M4 13.5V20h6.5L20.873 9.627a2 2 0 000-2.828L18.373 4.83a2 2 0 00-2.828 0L4 16.375z" />
+                    </svg>
+                  </button>
+
+                  <!-- Delete icon (black, turns red on hover) -->
+                  <button type="button" class="user-action-icon delete-user inline-flex items-center justify-center w-9 h-9 rounded hover:bg-red-50 text-black" data-user-id="{{ u.id }}" title="Delete user">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 transition-colors duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Donations Section -->
+    <section id="donations" class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold">Donations</h2>
+        <div class="flex items-center space-x-3">
+          <label class="text-sm text-gray-600">Sort:</label>
+          <select id="donationSort" class="border rounded p-1 text-sm">
+            <option value="amount_desc">Highest to lowest</option>
+            <option value="amount_asc">Lowest to highest</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="bg-white shadow overflow-hidden rounded">
+        <table class="table-fixed w-full text-left">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="p-3">Donor</th>
+              <th class="p-3">Project</th>
+              <th class="p-3">Amount</th>
+              <th class="p-3">Date</th>
+            </tr>
+          </thead>
+          <tbody id="donationsTable">
+            {% for d in donations %}
+            <tr data-amount="{{ d.amount }}">
+              <td class="p-3 font-medium">{{ d.donor }}</td>
+              <td class="p-3">{{ d.project }}</td>
+              <td class="p-3">{{ d.amount|number_format(2, '.', ',') }} €</td>
+              <td class="p-3">{{ d.date }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Comments Modal -->
+<div id="commentsModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+  <div class="modal-backdrop absolute inset-0"></div>
+  <div class="bg-white rounded shadow-lg z-10 max-w-2xl w-full p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold">Comments</h3>
+      <button type="button" id="closeModal" class="text-gray-500">Close</button>
+    </div>
+    <div id="commentsBody" class="space-y-3 max-h-96 overflow-auto"></div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div id="confirmDeleteModal" class="hidden fixed inset-0 z-60 items-center justify-center">
+  <div class="modal-backdrop absolute inset-0"></div>
+  <div class="bg-white rounded shadow-lg z-10 max-w-md w-full p-6">
+    <div class="mb-4">
+      <h4 class="font-bold">Confirm deletion</h4>
+    </div>
+    <div class="confirm-message text-sm text-gray-700 mb-4">Are you sure you want to delete this comment?</div>
+    <div id="confirmDeleteError" class="text-sm text-red-500 mb-3 hidden"></div>
+    <div class="flex justify-end space-x-2">
+      <button type="button" id="cancelDeleteBtn" class="px-3 py-1 rounded border">Cancel</button>
+      <button type="button" id="confirmDeleteBtn" class="px-3 py-1 rounded bg-red-500 text-white">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Project Modal -->
+<div id="editProjectModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+  <div class="modal-backdrop absolute inset-0"></div>
+  <div class="bg-white rounded shadow-lg z-10 max-w-2xl w-full p-6">
+    <h2 class="text-xl font-bold mb-4">Edit project</h2>
+    <form id="editProjectForm" method="post">
+      <input type="hidden" name="_token" id="editProjectToken">
+      <div class="mb-4">
+         <label class="block text-sm font-medium text-gray-700">Title</label>
+         <input name="title" id="editProjectTitle" class="mt-1 block w-full border rounded p-2" required />
+      </div>
+      <div class="mb-4">
+         <label class="block text-sm font-medium text-gray-700">Description</label>
+         <textarea name="description" id="editProjectDescription" rows="6" class="mt-1 block w-full border rounded p-2"></textarea>
+      </div>
+      <!-- Status field removed from modal as it is now inline in the table -->
+      <div class="flex justify-end space-x-2">
+        <button type="button" class="close-modal bg-white text-gray-700 border px-4 py-2 rounded">Cancel</button>
+        <button type="submit" class="bg-black text-white px-4 py-2 rounded">Save changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="editUserModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+  <div class="modal-backdrop absolute inset-0"></div>
+  <div class="bg-white rounded shadow-lg z-10 max-w-lg w-full p-6">
+    <h2 class="text-xl font-bold mb-4">Edit user</h2>
+    <form id="editUserForm" method="post">
+      <input type="hidden" name="_token" id="editUserToken">
+       <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">Name</label>
+        <input name="name" id="editUserName" class="mt-1 block w-full border rounded p-2" required />
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">Email</label>
+        <input type="email" name="email" id="editUserEmail" class="mt-1 block w-full border rounded p-2" required />
+      </div>
+      <div class="flex justify-end space-x-2">
+         <button type="button" class="close-modal bg-white text-gray-700 border px-4 py-2 rounded">Cancel</button>
+        <button type="submit" class="bg-black text-white px-4 py-2 rounded">Save changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Data from server
+  const donationsChartData = {{ donations_chart.values|json_encode|raw }};
+  const donationsChartLabels = {{ donations_chart.labels|json_encode|raw }};
+  const projectsChartData = {{ projects_chart.values|json_encode|raw }};
+  const projectsChartLabels = {{ projects_chart.labels|json_encode|raw }};
+  const commentsByProject = {{ commentsByProject|json_encode|raw }};
+
+  // Store original data for filtering
+  const allProjects = {{ projects|json_encode|raw }};
+  const allUsers = {{ users|json_encode|raw }};
+  const allDonations = {{ donations|json_encode|raw }};
+  
+  // Date filter functionality
+  const dateFilterSelect = document.getElementById('dateFilter');
+  const customDateRange = document.getElementById('customDateRange');
+  const startDateInput = document.getElementById('startDate');
+  const endDateInput = document.getElementById('endDate');
+  const applyCustomDateBtn = document.getElementById('applyCustomDate');
+
+  // Show/hide custom date inputs
+  dateFilterSelect.addEventListener('change', (e) => {
+    if (e.target.value === 'custom') {
+      customDateRange.classList.remove('hidden');
+      customDateRange.classList.add('flex');
+    } else {
+      customDateRange.classList.add('hidden');
+      customDateRange.classList.remove('flex');
+      applyDateFilter(e.target.value);
+    }
+  });
+
+  // Apply custom date range
+  applyCustomDateBtn.addEventListener('click', () => {
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+    if (startDate && endDate) {
+      applyDateFilter('custom', startDate, endDate);
+    } else {
+      alert('Please select both start and end dates');
+    }
+  });
+
+  // Main filter function
+  function applyDateFilter(filterType, customStart = null, customEnd = null) {
+    const now = new Date();
+    let startDate, endDate;
+
+    // Calculate date range based on filter type
+    switch(filterType) {
+      case 'today':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+        break;
+      case 'week':
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay());
+        startDate = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate());
+        endDate = now;
+        break;
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = now;
+        break;
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        endDate = now;
+        break;
+      case 'custom':
+        startDate = new Date(customStart);
+        endDate = new Date(customEnd);
+        endDate.setHours(23, 59, 59);
+        break;
+      case 'all':
+      default:
+        // No filtering for 'all'
+        updateStats(allUsers.length, allProjects.length, 
+          allDonations.reduce((sum, d) => sum + d.amount, 0),
+          {{ totals.comments }});
+        return;
+    }
+
+    // Filter data by date range
+    const filteredUsers = allUsers.filter(u => {
+      const userDate = new Date(u.registeredAt);
+      return userDate >= startDate && userDate <= endDate;
+    });
+
+    const filteredProjects = allProjects.filter(p => {
+      const projectDate = new Date(p.createdAt);
+      return projectDate >= startDate && projectDate <= endDate;
+    });
+
+    const filteredDonations = allDonations.filter(d => {
+      const donationDate = new Date(d.date);
+      return donationDate >= startDate && donationDate <= endDate;
+    });
+
+    const totalDonationsAmount = filteredDonations.reduce((sum, d) => sum + d.amount, 0);
+
+    // Update stats display
+    updateStats(filteredUsers.length, filteredProjects.length, totalDonationsAmount, '—');
+  }
+
+  // Update stats in the UI
+  function updateStats(users, projects, donations, comments) {
+    document.getElementById('stat-users').textContent = users.toLocaleString();
+    document.getElementById('stat-projects').textContent = projects.toLocaleString();
+    document.getElementById('stat-donations').textContent = donations.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '€';
+    
+    // Only update comments if it's not the placeholder
+    if (comments !== '—') {
+      document.getElementById('stat-comments').textContent = comments.toLocaleString();
+    }
+    
+    // Could add percentage changes here later
+    // For now, just showing the filtered counts
+  }
+
+  // Initialize with default filter (month)
+  applyDateFilter('month');
+
+  // Charts (optimized: animations off, points disabled, decimation enabled)
+  if (typeof Chart !== 'undefined') {
+    try {
+      const donationsChart = new Chart(document.getElementById('donationsChart'), {
+        type: 'line',
+        data: { labels: donationsChartLabels, datasets: [{ label: 'Donations', data: donationsChartData, backgroundColor: 'rgba(59,130,246,0.15)', borderColor: 'rgba(59,130,246,1)', pointRadius: 0 }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          elements: { point: { radius: 0 }, line: { tension: 0 } },
+          plugins: { decimation: { enabled: true, algorithm: 'lttb', samples: 200 } }
+        }
+      });
+
+      const projectsChart = new Chart(document.getElementById('projectsChart'), {
+        type: 'bar',
+        data: { labels: projectsChartLabels, datasets: [{ label: 'Projects', data: projectsChartData, backgroundColor: 'rgba(16,185,129,0.8)', barPercentage: 0.85 }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          plugins: { decimation: { enabled: true, algorithm: 'lttb', samples: 200 } }
+        }
+      });
+
+      // Debounce for window resize to avoid frequent reflows
+      function debounce(func, wait) {
+        let timer;
+        return function(...args) {
+          clearTimeout(timer);
+          timer = setTimeout(() => func.apply(this, args), wait);
+        };
+      }
+      const handleResize = debounce(() => {
+        donationsChart.resize();
+        projectsChart.resize();
+      }, 150);
+      window.addEventListener('resize', handleResize);
+    } catch (err) {
+      // Fail gracefully — charts are optional; ensure the rest of the script runs
+      console.warn('Chart initialization failed:', err);
+    }
+  } else {
+    console.warn('Chart.js is not loaded; skipping chart rendering.');
+  }
+
+  // Show comments modal
+  document.querySelectorAll('.show-comments').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.projectId;
+      const body = document.getElementById('commentsBody');
+      body.innerHTML = '';
+      const comments = commentsByProject[id] || [];
+      if (comments.length === 0) {
+        body.innerHTML = '<p class="text-sm text-gray-500">No comments</p>';
+      } else {
+        comments.forEach(c => {
+          const el = document.createElement('div');
+          el.className = 'p-3 border rounded flex items-start justify-between space-x-3';
+          el.innerHTML = `
+            <div class="flex-1">
+              <div class="text-sm text-gray-700"><strong>${c.author}</strong> <span class="text-xs text-gray-400">${c.createdAt}</span></div>
+              <div class="mt-2 text-sm">${c.content}</div>
+            </div>
+            <div class="flex-shrink-0">
+              <button type="button" class="delete-comment bg-red-500 text-white px-2 py-1 rounded text-xs cursor-pointer" data-comment-id="${c.id}" data-csrf="${c.csrf}">Delete</button>
+            </div>
+          `;
+          body.appendChild(el);
+
+          // Attach delete handler for this comment button — open generic confirm modal
+          const delBtn = el.querySelector('.delete-comment');
+          if (delBtn) {
+            delBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const commentId = delBtn.dataset.commentId;
+              openConfirmAction({
+                message: 'Are you sure you want to delete this comment? This action cannot be undone.',
+                confirmText: 'Delete',
+                url: `/admin/comment/${commentId}/delete`,
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json', 'X-CSRF-Token': delBtn.dataset.csrf },
+                body: `_token=${encodeURIComponent(delBtn.dataset.csrf)}`,
+                element: el,
+                onSuccess: () => {
+                  // remove from local cache and DOM
+                  if (commentsByProject[id]) {
+                    const idx = commentsByProject[id].findIndex(x => String(x.id) === String(commentId));
+                    if (idx !== -1) commentsByProject[id].splice(idx, 1);
+                  }
+                  el.remove();
+                }
+              });
+            });
+          }
+        });
+      }
+      document.getElementById('commentsModal').classList.remove('hidden');
+      document.getElementById('commentsModal').classList.add('flex');
+    });
+  });
+  const commentsModalEl = document.getElementById('commentsModal');
+  const closeModalBtn = document.getElementById('closeModal');
+
+  closeModalBtn.addEventListener('click', () => {
+    commentsModalEl.classList.add('hidden');
+    commentsModalEl.classList.remove('flex');
+  });
+
+  // Close comments modal when clicking on backdrop / outside the dialog
+  commentsModalEl.addEventListener('click', (e) => {
+    if (e.target === commentsModalEl || e.target.classList.contains('modal-backdrop')) {
+      closeModalBtn.click();
+    }
+  });
+
+  // Close modals with Escape key (nice-to-have)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (commentsModalEl && !commentsModalEl.classList.contains('hidden')) {
+        closeModalBtn.click();
+      }
+      if (confirmModal && !confirmModal.classList.contains('hidden')) {
+        closeConfirmDelete();
+      }
+    }
+  });
+
+  // Generic confirm action modal logic (supports delete project, ban user, delete comment, etc.)
+  const confirmModal = document.getElementById('confirmDeleteModal');
+  const confirmMessage = confirmModal?.querySelector('.confirm-message');
+  const confirmError = document.getElementById('confirmDeleteError');
+  const confirmBtn = document.getElementById('confirmDeleteBtn');
+  const cancelBtn = document.getElementById('cancelDeleteBtn');
+  let pendingAction = null;
+
+  function openConfirmAction({ message = 'Are you sure?', confirmText = 'Confirm', url, method = 'POST', headers = {}, body = null, element = null, onSuccess = null }) {
+    if (!confirmModal) {
+      console.error('Confirm modal missing');
+      return;
+    }
+    pendingAction = { url, method, headers, body, element, onSuccess };
+    confirmError.classList.add('hidden');
+    confirmMessage.textContent = message;
+    confirmBtn.textContent = confirmText;
+    confirmModal.classList.remove('hidden');
+    confirmModal.classList.add('flex');
+  }
+  function closeConfirmAction() {
+    if (!confirmModal) return;
+    pendingAction = null;
+    confirmModal.classList.add('hidden');
+    confirmModal.classList.remove('flex');
+  }
+
+  cancelBtn?.addEventListener('click', () => closeConfirmAction());
+
+  confirmBtn?.addEventListener('click', async () => {
+    if (!pendingAction) return;
+    const { url, method, headers, body, element, onSuccess } = pendingAction;
+
+    // disable UI while request is in-flight
+    confirmBtn.disabled = true;
+    const previousText = confirmBtn.textContent;
+    confirmBtn.textContent = 'Processing...';
+    confirmError.classList.add('hidden');
+
+    try {
+      const res = await fetch(url, {
+        method,
+        credentials: 'same-origin',
+        headers,
+        body
+      });
+
+      let json = null;
+      try {
+        json = await res.json();
+      } catch (parseErr) {
+        const text = await res.text().catch(() => '');
+        confirmError.textContent = `Action failed: ${res.status} ${res.statusText}${text ? ' - ' + text.slice(0, 300) : ''}`;
+        confirmError.classList.remove('hidden');
+        console.error('Action parse error', parseErr, text);
+        return;
+      }
+
+      if (res.ok && json && (json.ok || json.success || json.result === 'ok')) {
+        if (typeof onSuccess === 'function') {
+          onSuccess(json);
+        } else if (element) {
+          element.remove();
+        }
+        closeConfirmAction();
+      } else if (res.ok && !json) {
+        // if no json but ok, consider success
+        if (typeof onSuccess === 'function') onSuccess();
+        else if (element) element.remove();
+        closeConfirmAction();
+      } else {
+        const msg = (json && (json.error || json.message)) ? (json.error || json.message) : `Action failed: ${res.status} ${res.statusText}`;
+        confirmError.textContent = msg;
+        confirmError.classList.remove('hidden');
+        console.error('Action failed', res.status, res.statusText, json);
+      }
+    } catch (err) {
+      confirmError.textContent = 'Network or server error while performing action';
+      confirmError.classList.remove('hidden');
+      console.error(err);
+    } finally {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = previousText;
+    }
+  });
+
+  // Project delete handler (icon buttons)
+  document.querySelectorAll('.delete-project').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = btn.dataset.projectId;
+      const row = btn.closest('tr');
+      openConfirmAction({
+        message: 'Are you sure you want to delete this project? This action cannot be undone.',
+        confirmText: 'Delete',
+        url: `/admin/project/${id}/delete`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+        body: `_token=${encodeURIComponent('')}`, // replace with server token if available
+        element: row,
+        onSuccess: () => {
+          if (row) row.remove();
+        }
+      });
+    });
+  });
+
+  // Hover color for icons: delete -> red, edit -> blue (set via classes; add fallback for older browsers)
+  document.querySelectorAll('.project-action-icon').forEach(el => {
+    const svg = el.querySelector('svg');
+    el.addEventListener('mouseenter', () => {
+      if (el.classList.contains('delete-project')) {
+        svg.classList.remove('text-black');
+        svg.classList.add('text-red-600');
+      } else if (el.classList.contains('edit-icon') || el.querySelector('.edit-icon')) {
+        svg.classList.remove('text-black');
+        svg.classList.add('text-blue-600');
+      }
+    });
+    el.addEventListener('mouseleave', () => {
+      svg.classList.remove('text-red-600', 'text-blue-600');
+      svg.classList.add('text-black');
+    });
+  });
+
+  // Project status change handler
+  document.querySelectorAll('.project-status-select').forEach(select => {
+    select.addEventListener('change', async (e) => {
+      const projectId = select.dataset.projectId;
+      const newStatus = select.value;
+      const previousValue = select.querySelector('option:not([value="' + newStatus + '"])')?.value || newStatus;
+
+      try {
+        const res = await fetch(`/admin/project/${projectId}/status`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+
+        const json = await res.json();
+        if (res.ok && json.ok) {
+          // Status updated successfully
+          console.log('Project status updated to:', newStatus);
+        } else {
+          // Revert the select on error
+          select.value = previousValue;
+          alert(json.error || 'Failed to update project status');
+        }
+      } catch (err) {
+        // Revert the select on error
+        select.value = previousValue;
+        alert('Network error while updating project status');
+        console.error(err);
+      }
+    });
+  });
+
+  // User role change handler
+  document.querySelectorAll('.user-role-select').forEach(select => {
+    select.addEventListener('change', async (e) => {
+      const userId = select.dataset.userId;
+      const newRole = select.value;
+      const previousValue = select.querySelector('option:not([value="' + newRole + '"])').value;
+
+      try {
+        const res = await fetch(`/admin/user/${userId}/role`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ role: newRole })
+        });
+
+        const json = await res.json();
+        if (res.ok && json.ok) {
+          // Role updated successfully
+          console.log('User role updated to:', newRole);
+        } else {
+          // Revert the select on error
+          select.value = previousValue;
+          alert(json.error || 'Failed to update user role');
+        }
+      } catch (err) {
+        // Revert the select on error
+        select.value = previousValue;
+        alert('Network error while updating user role');
+        console.error(err);
+      }
+    });
+  });
+
+  // User status change handler
+  document.querySelectorAll('.user-status-select').forEach(select => {
+    select.addEventListener('change', async (e) => {
+      const userId = select.dataset.userId;
+      const newStatus = select.value;
+      const previousValue = select.querySelector('option:not([value="' + newStatus + '"])').value;
+
+      try {
+        const res = await fetch(`/admin/user/${userId}/status`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+
+        const json = await res.json();
+        if (res.ok && json.ok) {
+          // Status updated successfully
+          console.log('User status updated to:', newStatus);
+        } else {
+          // Revert the select on error
+          select.value = previousValue;
+          alert(json.error || 'Failed to update user status');
+        }
+      } catch (err) {
+        // Revert the select on error
+        select.value = previousValue;
+        alert('Network error while updating user status');
+        console.error(err);
+      }
+    });
+  });
+
+  // User delete handler
+  document.querySelectorAll('.delete-user').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const userId = btn.dataset.userId;
+      const row = btn.closest('tr');
+      openConfirmAction({
+        message: 'Are you sure you want to delete this user? This action cannot be undone.',
+        confirmText: 'Delete',
+        url: `/admin/user/${userId}/delete`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: null,
+        element: row,
+        onSuccess: () => {
+          if (row) row.remove();
+        }
+      });
+    });
+  });
+
+  // Hover color for user action icons: delete -> red, edit -> blue
+  document.querySelectorAll('.user-action-icon').forEach(el => {
+    const svg = el.querySelector('svg');
+    el.addEventListener('mouseenter', () => {
+      if (el.classList.contains('delete-user')) {
+        svg.classList.remove('text-black');
+        svg.classList.add('text-red-600');
+      } else if (el.classList.contains('edit-icon') || el.querySelector('.edit-icon')) {
+        svg.classList.remove('text-black');
+        svg.classList.add('text-blue-600');
+      }
+    });
+    el.addEventListener('mouseleave', () => {
+      svg.classList.remove('text-red-600', 'text-blue-600');
+      svg.classList.add('text-black');
+    });
+  });
+
+  // Sorting utilities
+  function sortTableRows(containerSelector, getValue, numeric=false, asc=true) {
+    const container = document.querySelector(containerSelector);
+    const rows = Array.from(container.querySelectorAll('tr'));
+    rows.sort((a,b) => {
+      const va = getValue(a);
+      const vb = getValue(b);
+      if (numeric) return asc ? (va - vb) : (vb - va);
+      return asc ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+    rows.forEach(r => container.appendChild(r));
+  }
+
+  document.getElementById('projectSort').addEventListener('change', (e) => {
+    const v = e.target.value;
+    if (v === 'donations_desc') sortTableRows('#projectsTable', r => parseFloat(r.dataset.donations), true, false);
+    if (v === 'donations_asc') sortTableRows('#projectsTable', r => parseFloat(r.dataset.donations), true, true);
+    if (v === 'created_desc') sortTableRows('#projectsTable', r => r.dataset.created, false, false);
+    if (v === 'created_asc') sortTableRows('#projectsTable', r => r.dataset.created, false, true);
+  });
+
+  document.getElementById('donationSort').addEventListener('change', (e) => {
+    const v = e.target.value;
+    if (v === 'amount_desc') sortTableRows('#donationsTable', r => parseFloat(r.dataset.amount), true, false);
+    if (v === 'amount_asc') sortTableRows('#donationsTable', r => parseFloat(r.dataset.amount), true, true);
+  });
+
+  document.getElementById('userSort').addEventListener('change', (e) => {
+    const v = e.target.value;
+    if (v === 'name_asc') sortTableRows('#usersTable', r => r.dataset.name, false, true);
+    if (v === 'name_desc') sortTableRows('#usersTable', r => r.dataset.name, false, false);
+    if (v === 'registered_desc') sortTableRows('#usersTable', r => r.dataset.registered, false, false);
+    if (v === 'registered_asc') sortTableRows('#usersTable', r => r.dataset.registered, false, true);
+  });
+  // ========== Edit Project Modal Logic ==========
+  const editProjectModal = document.getElementById('editProjectModal');
+  const editProjectForm = document.getElementById('editProjectForm');
+  
+  document.querySelectorAll('.open-project-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const title = btn.dataset.title;
+      const desc = btn.dataset.description;
+      const status = btn.dataset.status;
+      const csrf = btn.dataset.csrf;
+
+      document.getElementById('editProjectTitle').value = title;
+      document.getElementById('editProjectDescription').value = desc;
+      // Status handling removed from modal logic
+      document.getElementById('editProjectToken').value = csrf;
+      
+      editProjectForm.action = `/admin/project/${id}/edit`;
+
+      editProjectModal.classList.remove('hidden');
+      editProjectModal.classList.add('flex');
+    });
+  });
+
+  // ========== Edit User Modal Logic ==========
+  const editUserModal = document.getElementById('editUserModal');
+  const editUserForm = document.getElementById('editUserForm');
+
+  document.querySelectorAll('.open-user-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const name = btn.dataset.name;
+      const email = btn.dataset.email;
+      const csrf = btn.dataset.csrf;
+
+      document.getElementById('editUserName').value = name;
+      document.getElementById('editUserEmail').value = email;
+      document.getElementById('editUserToken').value = csrf;
+
+      editUserForm.action = `/admin/user/${id}/edit`;
+
+      editUserModal.classList.remove('hidden');
+      editUserModal.classList.add('flex');
+    });
+  });
+
+  // Close modals handler
+  document.querySelectorAll('.close-modal').forEach(btn => {
+    btn.addEventListener('click', () => {
+      editProjectModal.classList.add('hidden');
+      editProjectModal.classList.remove('flex');
+      editUserModal.classList.add('hidden');
+      editUserModal.classList.remove('flex');
+    });
+  });
+  
+  // Close on backdrop click
+  [editProjectModal, editUserModal].forEach(modal => {
+    modal.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-backdrop')) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    });
+  });
+</script>
+{% endblock %}

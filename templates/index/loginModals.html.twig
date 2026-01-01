@@ -125,4 +125,89 @@
             }
         });
     });
+
+
+    // Show info modal for banned/non-existing account when backend tells us
+    document.addEventListener('DOMContentLoaded', function () {
+        // Prefer server-provided variable, fall back to URL param
+        let authInfoType = null;
+        // Safely read server variable only if defined to avoid Twig undefined variable errors
+        const serverAuthType = {% if auth_error_type is defined %}{{ auth_error_type|json_encode|raw }}{% else %}null{% endif %};
+        if (serverAuthType) {
+            authInfoType = serverAuthType;
+        } else {
+            const params = new URLSearchParams(window.location.search);
+            authInfoType = params.get('auth_error_type');
+        }
+        if (!authInfoType) return;
+        console.log('authInfoType:', authInfoType);
+        // Debug banner so it's visible when server provided the auth error type
+        const debugBanner = document.createElement('div');
+        debugBanner.style.position = 'fixed';
+        debugBanner.style.right = '12px';
+        debugBanner.style.top = '12px';
+        debugBanner.style.background = 'rgba(0,0,0,0.7)';
+        debugBanner.style.color = 'white';
+        debugBanner.style.padding = '6px 10px';
+        debugBanner.style.borderRadius = '6px';
+        debugBanner.style.zIndex = 9999;
+        debugBanner.style.fontSize = '13px';
+        debugBanner.textContent = `authInfoType: ${authInfoType}`;
+        document.body.appendChild(debugBanner);
+        setTimeout(() => debugBanner.remove(), 5000);
+
+        // If it's an invalid credentials case, open the existing login modal
+        if (authInfoType === 'invalid') {
+            const authModal = document.getElementById('auth-modal');
+            if (authModal) {
+                authModal.classList.remove('hidden');
+                const emailInput = authModal.querySelector('#modal_inputEmail');
+                if (emailInput) emailInput.focus();
+            }
+            return;
+        }
+
+        // create or select an info modal for banned/non-existing account
+        let infoModal = document.getElementById('auth-info-modal');
+        if (!infoModal) {
+            infoModal = document.createElement('div');
+            infoModal.id = 'auth-info-modal';
+            infoModal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/70';
+            infoModal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-md relative p-6">
+                    <button id="close-auth-info-modal" class="absolute top-2 right-2 text-gray-500 hover:text-black cursor-pointer text-2xl">&times;</button>
+                    <h3 id="auth-info-title" class="text-lg font-bold"></h3>
+                    <p id="auth-info-message" class="mt-2"></p>
+                    <div class="mt-4 flex justify-end"><button id="auth-info-close" class="px-3 py-1 rounded border">Close</button></div>
+                </div>
+            `;
+            document.body.appendChild(infoModal);
+        }
+
+        const titleEl = infoModal.querySelector('#auth-info-title');
+        const msgEl = infoModal.querySelector('#auth-info-message');
+        const closeBtn = infoModal.querySelector('#auth-info-close');
+        const closeX = infoModal.querySelector('#close-auth-info-modal');
+
+        if (authInfoType === 'banned') {
+            titleEl.textContent = 'Account banned';
+            msgEl.textContent = 'This account has been banned and cannot log in. If you think this is a mistake contact support.';
+        } else if (authInfoType === 'no_user') {
+            titleEl.textContent = 'Account not found';
+            msgEl.textContent = 'No account exists with that email address. Please check your email or register a new account.';
+        } else {
+            titleEl.textContent = 'Login failed';
+            msgEl.textContent = 'Invalid credentials. Please check your email and password.';
+        }
+
+        function closeInfo() {
+            if (!infoModal) return;
+            infoModal.remove();
+        }
+
+        closeBtn && closeBtn.addEventListener('click', closeInfo);
+        closeX && closeX.addEventListener('click', closeInfo);
+        infoModal.addEventListener('click', (e) => { if (e.target === infoModal) closeInfo(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeInfo(); });
+    });
 </script>

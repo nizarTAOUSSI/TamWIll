@@ -48,8 +48,40 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
             return new RedirectResponse($targetPath);
         }
 
+        $user = $token->getUser();
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            return new RedirectResponse($this->urlGenerator->generate('admin_dashboard'));
+        }
+
         // After login, keep the user on the login page so the greeting is shown there
         return new RedirectResponse($this->urlGenerator->generate(self::LOGIN_ROUTE));
+    }
+
+    public function onAuthenticationFailure(Request $request, \Symfony\Component\Security\Core\Exception\AuthenticationException $exception): Response
+    {
+        // Walk the exception chain to detect specific cases
+        $type = 'invalid';
+        $e = $exception;
+        while ($e) {
+            if ($e instanceof \Symfony\Component\Security\Core\Exception\DisabledException) {
+                $type = 'banned';
+                break;
+            }
+            if ($e instanceof \Symfony\Component\Security\Core\Exception\UserNotFoundException) {
+                $type = 'no_user';
+                break;
+            }
+            $e = $e->getPrevious();
+        }
+
+        $params = ['auth_error_type' => $type];
+        if ($type === 'invalid') {
+            // show login modal so user can try again
+            $params['login'] = 'true';
+        }
+
+        $url = $this->urlGenerator->generate('TamWill', $params);
+        return new RedirectResponse($url);
     }
 
     protected function getLoginUrl(Request $request): string
