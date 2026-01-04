@@ -39,6 +39,14 @@ nav { display: none; }
         <a href="#donations" class="block py-2 px-3 rounded hover:bg-gray-100 text-gray-700 transition-colors">Donations</a>
       </li>
       <li>
+        <a href="#payouts" class="block py-2 px-3 rounded hover:bg-gray-100 text-gray-700 transition-colors flex items-center justify-between">
+          <span>Payout Requests</span>
+          {% if payoutRequests|length > 0 %}
+            <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">{{ payoutRequests|length }}</span>
+          {% endif %}
+        </a>
+      </li>
+      <li>
         <div class="border-t border-gray-200 my-2"></div>
       </li>
       <li>
@@ -360,6 +368,104 @@ nav { display: none; }
         </table>
       </div>
     </section>
+
+    <!-- Payout Requests Section -->
+    <section id="payouts" class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold">Payout Requests</h2>
+        <div class="flex items-center space-x-3">
+          <span class="text-sm text-gray-500">{{ payoutRequests|length }} pending</span>
+        </div>
+      </div>
+
+      <div class="bg-white shadow overflow-hidden rounded">
+        {% if payoutRequests|length > 0 %}
+        <table class="table-fixed w-full text-left">
+          <thead class="bg-gray-100 border-b">
+            <tr>
+              <th class="p-3 w-1/4 font-semibold text-gray-700">Project</th>
+              <th class="p-3 w-1/5 font-semibold text-gray-700">Creator</th>
+              <th class="p-3 w-1/6 font-semibold text-gray-700">Amount</th>
+              <th class="p-3 w-1/4 font-semibold text-gray-700">RIB</th>
+              <th class="p-3 w-1/6 font-semibold text-gray-700">Status</th>
+              <th class="p-3 w-20 font-semibold text-gray-700">Action</th>
+            </tr>
+          </thead>
+          <tbody id="payoutRequestsTable">
+            {% for payout in payoutRequests %}
+            <tr class="border-b hover:bg-gray-50" data-payout-id="{{ payout.id }}">
+              <td class="p-3">
+                <div class="font-medium text-gray-900">{{ payout.title }}</div>
+                <div class="text-xs text-gray-500">ID: {{ payout.id }}</div>
+              </td>
+              <td class="p-3">
+                <div class="font-medium">{{ payout.creator }}</div>
+                <div class="text-xs text-gray-500">{{ payout.creatorEmail }}</div>
+              </td>
+              <td class="p-3">
+                <span class="font-bold text-green-600">{{ payout.collectedAmount|number_format(2, '.', ',') }} €</span>
+              </td>
+              <td class="p-3">
+                <div class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                  {{ payout.rib|length > 20 ? payout.rib[:20] ~ '...' : payout.rib }}
+                </div>
+              </td>
+              <td class="p-3">
+                <span class="px-2 py-1 text-xs rounded-full {% if payout.status == 'pending' %}bg-yellow-100 text-yellow-800{% elseif payout.status == 'requested' %}bg-blue-100 text-blue-800{% elseif payout.status == 'confirmed' %}bg-green-100 text-green-800{% endif %}">
+                  {{ payout.status|title }}
+                </span>
+                <div class="text-xs text-gray-500 mt-1">{{ payout.requestedAt }}</div>
+              </td>
+              <td class="p-3">
+                {% if payout.status in ['pending', 'requested'] %}
+                <button class="confirm-payout bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors" 
+                        data-payout-id="{{ payout.id }}"
+                        data-project-title="{{ payout.title }}"
+                        data-amount="{{ payout.collectedAmount|number_format(2, '.', ',') }}">
+                  Confirm
+                </button>
+                {% else %}
+                <span class="text-gray-400 text-sm">Processed</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="p-8 text-center text-gray-500">
+          <svg class="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+          <h3 class="text-lg font-medium mb-2">No Payout Requests</h3>
+          <p class="text-sm">All payouts have been processed or no requests have been made yet.</p>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Confirm Payout Modal -->
+<div id="confirmPayoutModal" class="hidden fixed inset-0 z-60 items-center justify-center">
+  <div class="modal-backdrop absolute inset-0"></div>
+  <div class="bg-white rounded shadow-lg z-10 max-w-md w-full p-6">
+    <div class="mb-4">
+      <h4 class="font-bold text-lg">Confirm Payout</h4>
+    </div>
+    <div class="text-sm text-gray-700 mb-4">
+      <p>Are you sure you want to confirm the payout for:</p>
+      <div class="mt-3 p-3 bg-gray-50 rounded border">
+        <div><strong>Project:</strong> <span id="payoutProjectTitle"></span></div>
+        <div><strong>Amount:</strong> <span id="payoutAmount"></span>€</div>
+      </div>
+      <p class="mt-3 text-xs text-gray-500">This will initiate a bank transfer and send a confirmation email to the project creator.</p>
+    </div>
+    <div id="confirmPayoutError" class="text-sm text-red-500 mb-3 hidden"></div>
+    <div class="flex justify-end space-x-2">
+      <button type="button" id="cancelPayoutBtn" class="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+      <button type="button" id="confirmPayoutBtn" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">Confirm Payout</button>
+    </div>
   </div>
 </div>
 
@@ -1052,6 +1158,137 @@ nav { display: none; }
         modal.classList.remove('flex');
       }
     });
+  });
+
+  // ========== Payout Confirmation Logic ==========
+  const confirmPayoutModal = document.getElementById('confirmPayoutModal');
+  const payoutProjectTitle = document.getElementById('payoutProjectTitle');
+  const payoutAmount = document.getElementById('payoutAmount');
+  const confirmPayoutError = document.getElementById('confirmPayoutError');
+  const confirmPayoutBtn = document.getElementById('confirmPayoutBtn');
+  const cancelPayoutBtn = document.getElementById('cancelPayoutBtn');
+  let currentPayoutId = null;
+
+  // Handle payout confirmation button clicks
+  document.querySelectorAll('.confirm-payout').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentPayoutId = btn.dataset.payoutId;
+      const projectTitle = btn.dataset.projectTitle;
+      const amount = btn.dataset.amount;
+
+      payoutProjectTitle.textContent = projectTitle;
+      payoutAmount.textContent = amount;
+      confirmPayoutError.classList.add('hidden');
+
+      confirmPayoutModal.classList.remove('hidden');
+      confirmPayoutModal.classList.add('flex');
+    });
+  });
+
+  // Handle payout cancellation
+  cancelPayoutBtn?.addEventListener('click', () => {
+    currentPayoutId = null;
+    confirmPayoutModal.classList.add('hidden');
+    confirmPayoutModal.classList.remove('flex');
+  });
+
+  // Handle payout confirmation
+  confirmPayoutBtn?.addEventListener('click', async () => {
+    if (!currentPayoutId) return;
+
+    // Disable button and show processing state
+    confirmPayoutBtn.disabled = true;
+    const originalText = confirmPayoutBtn.textContent;
+    confirmPayoutBtn.textContent = 'Processing...';
+    confirmPayoutError.classList.add('hidden');
+
+    try {
+      const response = await fetch(`/admin/payout/${currentPayoutId}/confirm`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.ok) {
+        // Success - remove the row from the table and close modal
+        const payoutRow = document.querySelector(`tr[data-payout-id="${currentPayoutId}"]`);
+        if (payoutRow) {
+          payoutRow.remove();
+        }
+
+        // Update payout requests count in sidebar
+        const countBadge = document.querySelector('a[href="#payouts"] .bg-red-600');
+        if (countBadge) {
+          const currentCount = parseInt(countBadge.textContent);
+          const newCount = currentCount - 1;
+          if (newCount <= 0) {
+            countBadge.remove();
+          } else {
+            countBadge.textContent = newCount;
+          }
+        }
+
+        // Update the pending count text
+        const pendingText = document.querySelector('#payouts .text-gray-500');
+        if (pendingText) {
+          const remainingRows = document.querySelectorAll('#payoutRequestsTable tr').length;
+          pendingText.textContent = `${remainingRows} pending`;
+        }
+
+        // Show success message
+        const successDiv = document.createElement('div');
+        successDiv.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg z-50';
+        successDiv.innerHTML = `
+          <strong>Success!</strong> Payout confirmed and email sent.
+        `;
+        document.body.appendChild(successDiv);
+        
+        setTimeout(() => {
+          successDiv.remove();
+        }, 5000);
+
+        // Close modal
+        confirmPayoutModal.classList.add('hidden');
+        confirmPayoutModal.classList.remove('flex');
+        currentPayoutId = null;
+
+      } else {
+        // Error from server
+        const errorMessage = result.error || 'Failed to confirm payout';
+        confirmPayoutError.textContent = errorMessage;
+        confirmPayoutError.classList.remove('hidden');
+      }
+
+    } catch (error) {
+      // Network or other error
+      confirmPayoutError.textContent = 'Network error occurred. Please try again.';
+      confirmPayoutError.classList.remove('hidden');
+      console.error('Payout confirmation error:', error);
+
+    } finally {
+      // Re-enable button
+      confirmPayoutBtn.disabled = false;
+      confirmPayoutBtn.textContent = originalText;
+    }
+  });
+
+  // Close payout modal on backdrop click
+  confirmPayoutModal?.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-backdrop')) {
+      cancelPayoutBtn.click();
+    }
+  });
+
+  // Close payout modal with Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && confirmPayoutModal && !confirmPayoutModal.classList.contains('hidden')) {
+      cancelPayoutBtn.click();
+    }
   });
 </script>
 {% endblock %}

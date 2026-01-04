@@ -7,6 +7,7 @@ use App\Repository\ContributionRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\UserRepository;
 use App\Entity\Comment;
+use App\Entity\Project;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,7 +15,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Csrf\CsrfToken;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface; 
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 
 class AdminController extends AbstractController
 {
@@ -126,6 +129,30 @@ class AdminController extends AbstractController
             ];
         }
 
+        $payoutRequests = $projectRepo->createQueryBuilder('p')
+            ->leftJoin('p.creator', 'u')
+            ->addSelect('u')
+            ->where('p.payoutStatus = :pending OR p.payoutStatus = :requested')
+            ->setParameter('pending', 'pending')
+            ->setParameter('requested', 'requested')
+            ->orderBy('p.payoutRequestedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $payoutRequestsData = [];
+        foreach ($payoutRequests as $p) {
+            $payoutRequestsData[] = [
+                'id' => $p->getId(),
+                'title' => $p->getTitle() ?? 'Untitled',
+                'creator' => $p->getCreator()?->getName() ?? $p->getCreator()?->getEmail() ?? '—',
+                'creatorEmail' => $p->getCreator()?->getEmail() ?? '',
+                'collectedAmount' => (float) $p->getCollectedAmount(),
+                'rib' => $p->getRib() ?? 'Not provided',
+                'status' => $p->getPayoutStatus() ?? 'pending',
+                'requestedAt' => $p->getPayoutRequestedAt()?->format('Y-m-d H:i') ?? 'Unknown',
+            ];
+        }
+
         return $this->render('index/admin.html.twig', [
             'totals' => [
                 'projects' => $totalProjects,
@@ -145,6 +172,7 @@ class AdminController extends AbstractController
             'commentsByProject' => $commentsByProject,
             'users' => $userData,
             'donations' => $donations,
+            'payoutRequests' => $payoutRequestsData,
         ]);
     }
 
@@ -281,7 +309,7 @@ class AdminController extends AbstractController
         }
 
         $role = strtoupper(trim($data['role']));
-        
+
         // Validate role
         if ($role !== 'ADMIN' && $role !== 'USER') {
             return new JsonResponse(['error' => 'Invalid role. Must be "admin" or "user"'], 400);
@@ -294,7 +322,7 @@ class AdminController extends AbstractController
             } else {
                 $user->setRoles(['ROLE_USER']);
             }
-            
+
             $em->flush();
             return new JsonResponse(['ok' => true, 'role' => $role]);
         } catch (\Throwable $e) {
@@ -320,7 +348,7 @@ class AdminController extends AbstractController
         }
 
         $status = strtolower(trim($data['status']));
-        
+
         // Validate status
         if ($status !== 'active' && $status !== 'banned') {
             return new JsonResponse(['error' => 'Invalid status. Must be "active" or "banned"'], 400);
@@ -418,15 +446,15 @@ class AdminController extends AbstractController
 
         $title = trim((string) $request->request->get('title'));
         $description = trim((string) $request->request->get('description'));
-        // Status is handled via separate AJAX call now, but we keep this if needed or remove it. 
+        // Status is handled via separate AJAX call now, but we keep this if needed or remove it.
         // Typically if the modal doesn't send status, we shouldn't change it.
         // The modal DOES send status field? No, we removed it from the modal HTML.
         // So we should NOT update status here anymore, or use existing value.
         // The user request said "dont show it in the modal".
-        
+
         if ($title !== '') $project->setTitle($title);
         if ($description !== '') $project->setDescription($description);
-        
+
         try {
             $em->flush();
             $this->addFlash('success', 'Project updated successfully.');
@@ -467,6 +495,60 @@ class AdminController extends AbstractController
             return new JsonResponse(['ok' => true, 'status' => $status]);
         } catch (\Throwable $e) {
             return new JsonResponse(['error' => 'Server error while updating project status'], 500);
+        }
+    }
+
+    #[Route('/admin/payout/{id}/confirm', name: 'admin_payout_confirm', methods: ['POST'])]
+    public function confirmPayout(Project $project, Request $request, EntityManagerInterface $em, MailerInterface $mailer): JsonResponse
+    {
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            return new JsonResponse(['error' => 'Access denied'], 403);
+        }
+
+        if (!$project || ($project->getPayoutStatus() !== 'pending' && $project->getPayoutStatus() !== 'requested')) {
+            return new JsonResponse(['error' => 'Invalid payout request'], 400);
+        }
+
+        if (!$project->getCollectedAmount() || (float)$project->getCollectedAmount() <= 0) {
+            return new JsonResponse(['error' => 'No collected amount to payout'], 400);
+        }
+
+        if (!$project->getRib()) {
+            return new JsonResponse(['error' => 'No RIB provided for this project'], 400);
+        }
+
+        try {
+            $project->setPayoutStatus('confirmed');
+            $project->setPayoutCompletedAt(new \DateTime());
+
+            $em->flush();
+
+            if ($project->getCreator() && $project->getCreator()->getEmail()) {
+                $email = (new Email())
+                    ->from('noreply@tamwill.com')
+                    ->to($project->getCreator()->getEmail())
+                    ->subject('Payout Confirmed - ' . $project->getTitle() . ' - TamWill')
+                    ->html($this->renderView('emails/payout_confirmed.html.twig', [
+                        'project' => $project
+                    ]));
+
+                try {
+                    $mailer->send($email);
+                } catch (\Exception $e) {
+                    error_log('Payout confirmation email failed: ' . $e->getMessage());
+                }
+            }
+
+            return new JsonResponse([
+                'ok' => true,
+                'message' => 'Payout confirmed successfully. Email sent to project creator.',
+                'projectId' => $project->getId(),
+                'newStatus' => 'confirmed'
+            ]);
+
+        } catch (\Throwable $e) {
+            error_log('Payout confirmation error: ' . $e->getMessage());
+            return new JsonResponse(['error' => 'Server error while confirming payout'], 500);
         }
     }
 }

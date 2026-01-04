@@ -3,7 +3,7 @@
     <div class="bg-white rounded-lg shadow-lg w-full max-w-md relative">
         <button id="close-auth-modal" class="absolute top-2 right-2 text-gray-500 hover:text-black cursor-pointer text-2xl">&times;</button>
         <div id="modal-login-form">
-            <form id="modal-login" class="space-y-6 p-6" method="post" novalidate>
+            <form id="modal-login" class="space-y-6 p-6" method="post" action="{{ path('app_login') }}" novalidate>
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
                 <h2 class="text-2xl font-bold text-center mb-2">Sign in to your account</h2>
                 <div class="rounded-md shadow-sm -space-y-px">
@@ -22,7 +22,7 @@
                         <label for="modal_remember_me" class="ml-2 block text-sm text-gray-900">Remember me</label>
                     </div>
                     <div class="text-sm">
-                        <a href="#" class="font-medium text-gray-500 hover:text-black hover:underline">Forgot your password?</a>
+                        <a href="{{ path('app_forgot_password') }}" class="font-medium text-gray-500 hover:text-black hover:underline">Forgot your password?</a>
                     </div>
                 </div>
                 <div class="flex justify-center">
@@ -127,11 +127,8 @@
     });
 
 
-    // Show info modal for banned/non-existing account when backend tells us
     document.addEventListener('DOMContentLoaded', function () {
-        // Prefer server-provided variable, fall back to URL param
         let authInfoType = null;
-        // Safely read server variable only if defined to avoid Twig undefined variable errors
         const serverAuthType = {% if auth_error_type is defined %}{{ auth_error_type|json_encode|raw }}{% else %}null{% endif %};
         if (serverAuthType) {
             authInfoType = serverAuthType;
@@ -141,7 +138,6 @@
         }
         if (!authInfoType) return;
         console.log('authInfoType:', authInfoType);
-        // Debug banner so it's visible when server provided the auth error type
         const debugBanner = document.createElement('div');
         debugBanner.style.position = 'fixed';
         debugBanner.style.right = '12px';
@@ -156,7 +152,6 @@
         document.body.appendChild(debugBanner);
         setTimeout(() => debugBanner.remove(), 5000);
 
-        // If it's an invalid credentials case, open the existing login modal
         if (authInfoType === 'invalid') {
             const authModal = document.getElementById('auth-modal');
             if (authModal) {
@@ -167,7 +162,6 @@
             return;
         }
 
-        // create or select an info modal for banned/non-existing account
         let infoModal = document.getElementById('auth-info-modal');
         if (!infoModal) {
             infoModal = document.createElement('div');
