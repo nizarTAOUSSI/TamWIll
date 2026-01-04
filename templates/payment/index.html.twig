@@ -19,15 +19,15 @@
 					<div class="text-center mb-8">
 						<div class="inline-flex items-baseline justify-center gap-1">
 							<span class="text-2xl font-bold text-gray-400">$</span>
-							<span class="text-6xl font-black text-black tracking-tighter" id="amountDisplay">50</span>
+							<input type="number" id="amountDisplay" name="amount" min="5" value="50" class="text-6xl font-black text-black tracking-tighter w-auto max-w-[200px] text-center border-none outline-none focus:ring-2 focus:ring-black rounded-lg p-2" oninput="updateFromInput(this.value)">
 						</div>
 					</div>
 
 					<div class="mb-8 px-2">
-						<input type="range" id="donationRange" name="amount" min="5" max="1000" value="50" step="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2" oninput="updateAmount(this.value)">
+						<input type="range" id="donationRange" min="5" max="1000" value="50" step="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2" oninput="updateAmount(this.value)">
 						<div class="flex justify-between text-xs font-bold text-gray-400 mt-3 font-mono">
 							<span>$5</span>
-							<span>$1000+</span>
+							<span>$1000</span>
 						</div>
 					</div>
 

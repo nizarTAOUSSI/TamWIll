@@ -259,7 +259,15 @@ document.body.style.overflow = 'auto';
 }
 
 function updateAmount(val) {
-document.getElementById('amountDisplay').innerText = val;
+const display = document.getElementById('amountDisplay');
+display.value = val;
+}
+
+function updateFromInput(val) {
+const range = document.getElementById('donationRange');
+if (val >= 5 && val <= 1000) {
+range.value = val;
+}
 }
 	</script>
 {% endblock %}
