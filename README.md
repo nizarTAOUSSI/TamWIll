@@ -214,7 +214,6 @@ Ce projet est réalisé à des fins éducatives dans le cadre du cursus EMSI.
 ## 📞 Contact & Support
 
 Pour toute question concernant le projet :
-- **Email institutionnel :** [votre-email@emsi.ma]
 - **Campus :** EMSI Les Orangers
 - **Année :** 2025-2026
 
