@@ -213,7 +213,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/admin/user/{id}/ban', name: 'admin_user_ban', methods: ['POST'])]
-    public function banUser(User $user, Request $request, EntityManagerInterface $em, CsrfTokenManagerInterface $csrf): JsonResponse
+    public function banUser(\App\Entity\User $user, Request $request, EntityManagerInterface $em, CsrfTokenManagerInterface $csrf): JsonResponse
     {
         if (!$this->isGranted('ROLE_ADMIN')) {
             return new JsonResponse(['error' => 'Access denied'], 403);
@@ -318,9 +318,9 @@ class AdminController extends AbstractController
         try {
             // Set roles based on the selection
             if ($role === 'ADMIN') {
-                $user->setRoles(['ROLE_ADMIN', 'ROLE_USER']);
+                $user->setRole('ROLE_ADMIN');
             } else {
-                $user->setRoles(['ROLE_USER']);
+                $user->setRole('ROLE_USER');
             }
 
             $em->flush();
@@ -371,7 +371,8 @@ class AdminController extends AbstractController
         }
 
         // Prevent admin from deleting themselves
-        if ($user->getId() === $this->getUser()->getId()) {
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof \App\Entity\User && $user->getId() === $currentUser->getId()) {
             return new JsonResponse(['error' => 'Cannot delete your own account'], 400);
         }
 
